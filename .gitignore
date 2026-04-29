@@ -1,0 +1,54 @@
+# Environment and secrets
+.env
+.env.local
+.env.production
+*.env
+
+# Auth files
+auth.json
+*.auth
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Build outputs
+*.apk
+*.aab
+*.dex
+
+# Local configs
+.local/
+config.local.json
