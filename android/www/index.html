@@ -1075,7 +1075,7 @@
             }
 
             try {
-                const resp = await fetch('http://43.156.57.226:5002/api/verify-pin', {
+                const resp = await fetch('http://43.156.57.226/api/verify-pin', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({pin: pin})
@@ -1523,7 +1523,7 @@
 
         // Connect to WebSocket
         function connectWS(initialMessage = null) {
-            const wsUrl = `ws://43.156.57.226:5002/ws`;
+            const wsUrl = `ws://43.156.57.226/ws`;
 
             try {
                 ws = new WebSocket(wsUrl);
