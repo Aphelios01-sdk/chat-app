@@ -1467,6 +1467,10 @@
             const welcome = document.getElementById('welcomeScreen');
             welcome.classList.add('hidden');
             document.getElementById('headerBack').classList.add('visible');
+            // Make chat UI visible
+            document.querySelector('.header').classList.add('dashboard-enter');
+            document.querySelector('.chat-container').classList.add('dashboard-enter');
+            document.querySelector('.input-area').classList.add('dashboard-enter');
             // After animation, set display:none
             setTimeout(() => {
                 welcome.style.display = 'none';
