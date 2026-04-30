@@ -1618,14 +1618,21 @@
             addMessage("Chat cleared. 👋\n\nAda yang bisa saya bantu lagi?", 'recv');
         }
 
+        // Debug: check what elements exist
+        console.log('lockScreen:', document.getElementById('lockScreen'));
+        console.log('welcomeScreen:', document.getElementById('welcomeScreen'));
+        console.log('chatContainer:', document.getElementById('chatContainer'));
+        console.log('messageInput:', document.getElementById('messageInput'));
+        console.log('statusText:', document.getElementById('statusText'));
+
         // Scroll to bottom on load
         document.getElementById('chatContainer').scrollTop = 0;
 
         // Prevent right-click context menu (security)
         // document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Auto-start chat (skip welcome/lock screen)
-        startChat();
+        // Auto-start disabled for debugging
+        // startChat();
     </script>
 </body>
 </html>
