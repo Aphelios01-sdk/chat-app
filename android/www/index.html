@@ -1588,15 +1588,22 @@
                     // If WS not available, use fetch API
                     useFetchAPI(initialMessage);
                 };
+
+                ws.onclose = () => {
+                    connected = false;
+                    document.getElementById('statusText').textContent = 'offline';
+                    // Don't auto-reconnect - use HTTP fallback instead
+                };
             } catch (e) {
                 hideTyping();
                 useFetchAPI(initialMessage);
             }
         }
 
-        // Fallback: Use fetch API
+        // Fallback: Use fetch API (always use absolute URL to VPS)
+        const API_BASE = 'http://43.156.57.226';
         function useFetchAPI(message) {
-            fetch('/api/chat', {
+            fetch(API_BASE + '/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message })
