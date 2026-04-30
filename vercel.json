@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/ws.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/chat.py", 
+      "use": "@vercel/python"
+    },
+    {
+      "src": "android/www/**",
+      "use": "static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/ws",
+      "dest": "/api/ws.py"
+    },
+    {
+      "src": "/api/chat",
+      "dest": "/api/chat.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/android/www/$1"
+    }
+  ]
+}
