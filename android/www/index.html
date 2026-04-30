@@ -955,7 +955,7 @@
 </head>
 <body>
     <!-- PIN Lock Screen -->
-    <div class="lock-screen" id="lockScreen">
+    <div class="lock-screen hidden" id="lockScreen">
         <div class="lock-icon">λ</div>
         <h3><span id="quoteText"></span></h3>
         <div class="pin-dots" id="pinDots">
@@ -993,7 +993,7 @@
     </div>
 
     <!-- Welcome Screen -->
-    <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-screen" id="welcomeScreen" style="display:none">
         <img src="saved_images/img_114971a3e80b.jpg" class="welcome-icon" alt="AI">
         <h2>Make Your Work Easier</h2>
         <p>L = Σ(y - y_pred)² + λ Σ(w²)</p>
@@ -1625,4 +1625,10 @@
         // document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
+<script>
+    // Auto-start chat (skip lock screen)
+    window.addEventListener('load', () => {
+        startChat();
+    });
+</script>
 </html>
