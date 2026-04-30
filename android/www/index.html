@@ -993,7 +993,7 @@
     </div>
 
     <!-- Welcome Screen -->
-    <div class="welcome-screen" id="welcomeScreen" style="display:none">
+    <div class="welcome-screen" id="welcomeScreen">
         <img src="saved_images/img_114971a3e80b.jpg" class="welcome-icon" alt="AI">
         <h2>Make Your Work Easier</h2>
         <p>L = Σ(y - y_pred)² + λ Σ(w²)</p>
@@ -1623,12 +1623,9 @@
 
         // Prevent right-click context menu (security)
         // document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Auto-start chat (skip welcome/lock screen)
+        startChat();
     </script>
 </body>
-<script>
-    // Auto-start chat (skip lock screen)
-    window.addEventListener('load', () => {
-        startChat();
-    });
-</script>
 </html>
