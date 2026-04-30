@@ -1619,11 +1619,14 @@
         }
 
         // Debug: check what elements exist
-        console.log('lockScreen:', document.getElementById('lockScreen'));
-        console.log('welcomeScreen:', document.getElementById('welcomeScreen'));
-        console.log('chatContainer:', document.getElementById('chatContainer'));
-        console.log('messageInput:', document.getElementById('messageInput'));
-        console.log('statusText:', document.getElementById('statusText'));
+        try {
+            console.log('lockScreen:', document.getElementById('lockScreen'));
+            console.log('welcomeScreen:', document.getElementById('welcomeScreen'));
+            console.log('chatContainer:', document.getElementById('chatContainer'));
+            console.log('messageInput:', document.getElementById('messageInput'));
+        } catch(e) {
+            alert('JS Error: ' + e.message);
+        }
 
         // Scroll to bottom on load
         document.getElementById('chatContainer').scrollTop = 0;
@@ -1631,8 +1634,15 @@
         // Prevent right-click context menu (security)
         // document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Auto-start disabled for debugging
-        // startChat();
+        // DEBUG: show welcome screen always (for testing)
+        try {
+            const lock = document.getElementById('lockScreen');
+            if (lock) lock.classList.add('hidden');
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.classList.remove('hidden');
+        } catch(e) {
+            alert('Setup error: ' + e.message);
+        }
     </script>
 </body>
 </html>
