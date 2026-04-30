@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#075E54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Chat AI - WhatsApp Style</title>
+    <title>Lambda</title>
     <style>
         * {
             margin: 0;
@@ -40,7 +40,7 @@
             overflow: hidden;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes fadeIn {
@@ -115,6 +115,35 @@
             background: #333333;
         }
 
+        /* Back Button */
+        .header-back {
+            background: none;
+            border: none;
+            color: #FFFFFF;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 4px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-back.visible {
+            display: flex;
+        }
+
+        .header-back:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .header-back:active {
+            background: rgba(255,255,255,0.2);
+            transform: scale(0.95);
+        }
+
         /* Chat Area */
         .chat-container {
             flex: 1;
@@ -176,11 +205,12 @@
             padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .choice-btn:hover {
             background: #0a4cb8;
+            transform: scale(1.05);
         }
 
         /* Streaming Message */
@@ -206,17 +236,18 @@
             line-height: 1.4;
             position: relative;
             word-wrap: break-word;
-            animation: messageIn 0.3s ease-out;
+            animation: messageIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
         @keyframes messageIn {
             from {
                 opacity: 0;
-                transform: translateY(12px) scale(0.95);
+                transform: translateY(8px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0);
             }
         }
 
@@ -225,7 +256,7 @@
             border-top-right-radius: 4px;
             border-bottom-right-radius: 4px;
             border-bottom-left-radius: 16px;
-            color: #FFF;
+            color: #111;
         }
 
         .message.recv {
@@ -260,133 +291,178 @@
             color: #FFFFFF;
         }
 
-        /* Typing Indicator */
-        .typing-indicator {
+        .message .reply-quote {
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid var(--wa-accent);
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--wa-text-dim);
+        }
+
+        .message .reply-quote .reply-sender {
+            font-weight: 600;
+            color: var(--wa-accent);
+            margin-bottom: 2px;
+        }
+
+        .message .reply-quote .reply-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 220px;
+        }
+
+        /* Reply Bar */
+        .reply-bar {
             display: none;
-            padding: 15px 20px;
-            margin: 5px 0;
+            background: var(--wa-input);
+            padding: 6px 12px 6px 50px;
+            border-top: 1px solid var(--wa-border);
+            font-size: 13px;
+            color: var(--wa-text-dim);
+            position: relative;
+            min-height: 38px;
         }
 
-        .typing-indicator.active {
+        .reply-bar.active {
             display: flex;
-            gap: 4px;
             align-items: center;
-            width: fit-content;
+            gap: 8px;
         }
 
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: var(--wa-text-light);
-            border-radius: 50%;
-            animation: typing 1.4s infinite;
-            display: inline-block;
+        .reply-bar .reply-label {
+            color: var(--wa-accent);
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
+        .reply-bar .reply-content {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
         }
 
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
+        .reply-bar .reply-close {
+            background: none;
+            border: none;
+            color: var(--wa-text-dim);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+            flex-shrink: 0;
         }
 
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        /* Notification Sound */
+        .notification-sound {
+            display: none;
+        }
+
+        /* Typing Indicator */
             30% { transform: translateY(-4px); opacity: 1; }
         }
 
         /* Input Area */
         .input-area {
-            background: var(--wa-input);
-            padding: 8px 12px;
+            background: #000000;
+            padding: 8px 10px;
             display: flex;
+            flex-direction: column;
             gap: 8px;
-            align-items: center;
-            border-top: 1px solid var(--wa-border);
-            flex-shrink: 0;
-            min-height: 58px;
+            border-top: 1px solid #333333;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 100;
             box-sizing: border-box;
+            overflow: visible;
+        }
+
+        /* Wrapper: contains emoji btn + textarea + send btn in one rounded box */
+        .input-area .input-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            background: #1A1A1A;
+            border-radius: 24px;
+            border: 1px solid #333333;
+            padding: 4px 6px;
+            gap: 4px;
         }
 
         .input-area .emoji-btn {
             background: none;
             border: none;
-            font-size: 26px;
+            font-size: 20px;
             cursor: pointer;
-            padding: 4px;
-            color: #FFFFFF;
-        }
-
-        .input-area .input-wrapper {
-            flex: 1;
+            color: #888888;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
             display: flex;
-            background: var(--wa-input);
-            border-radius: 20px;
-            border: 1px solid var(--wa-border);
-            transition: border-color 0.2s ease;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: color 0.2s, background 0.2s;
         }
 
-        .input-area .input-wrapper:focus-within {
-            border-color: #666666;
+        .input-area .emoji-btn:hover {
+            color: #FFFFFF;
+            background: rgba(255,255,255,0.1);
         }
 
         .input-area textarea {
             flex: 1;
             border: none;
-            padding: 10px 14px;
+            padding: 8px 4px;
             font-size: 15px;
             resize: none;
-            max-height: 100px;
             outline: none;
-            border-radius: 20px;
             font-family: inherit;
             background: transparent;
-            color: var(--wa-text);
-            transition: background 0.2s ease;
+            color: #FFFFFF;
+            line-height: 1.4;
+            max-height: 100px;
         }
 
         .input-area textarea::placeholder {
-            color: var(--wa-text-dim);
+            color: #666666;
         }
 
         .input-area .send-btn {
             background: #FFFFFF;
             color: #000000;
             border: none;
-            width: 48px;
-            height: 48px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
+            transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
         .input-area .send-btn:hover {
-            background: #E6E6E6;
-            transform: scale(1.08);
+            transform: scale(1.05);
         }
 
         .input-area .send-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
 
         /* Skills Popup Menu */
         .skills-popup {
-            position: fixed;
-            bottom: 70px;
-            left: 10px;
-            right: 10px;
-            max-height: 300px;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            max-height: 280px;
             background: #1A1A1A;
             border: 1px solid #333333;
             border-radius: 12px;
@@ -395,14 +471,16 @@
             display: none;
             flex-direction: column;
             opacity: 0;
-            transform: translateY(20px) scale(0.95);
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
 
         .skills-popup.active {
             display: flex;
             opacity: 1;
             transform: translateY(0) scale(1);
+            transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .skills-popup-header {
@@ -514,11 +592,6 @@
             font-size: 13px;
         }
 
-        .input-area .send-btn:active {
-            transform: scale(0.95);
-            opacity: 0.8;
-        }
-
         /* Welcome Screen */
         .welcome-screen {
             position: absolute;
@@ -538,7 +611,7 @@
         }
 
         .welcome-screen.hidden {
-            animation: welcomeOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: welcomeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes welcomeOut {
@@ -637,7 +710,7 @@
         }
 
         .lock-screen.hiding {
-            animation: lockScreenOut 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: lockScreenOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes lockScreenOut {
@@ -647,8 +720,7 @@
             }
             100% {
                 opacity: 0;
-                transform: scale(1.15) translateY(-30px);
-                filter: blur(8px);
+                transform: scale(1.08) translateY(-20px);
             }
         }
 
@@ -664,14 +736,14 @@
         }
 
         .dashboard-enter {
-            animation: dashboardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: dashboardIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             visibility: visible;
         }
 
         @keyframes dashboardIn {
             0% {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(12px);
             }
             100% {
                 opacity: 1;
@@ -684,13 +756,12 @@
             margin-bottom: 40px;
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
             color: #FFFFFF;
-            text-shadow: 0 0 30px rgba(255,255,255,0.15);
-            animation: pulse 3s ease-in-out infinite;
+            animation: pulse 2.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
         }
 
         @keyframes blink {
@@ -848,6 +919,38 @@
             pointer-events: none;
         }
 
+
+        /* Loading indicator - bottom */
+        .loading-indicator {
+            display: none;
+            position: fixed;
+            bottom: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            gap: 5px;
+            background: var(--wa-bg);
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+        .loading-indicator.active { display: flex; }
+        .loading-indicator .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--wa-text-dim);
+            border-radius: 50%;
+            animation: pulse-dot 1s infinite;
+        }
+        .loading-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
     </style>
 </head>
 <body>
@@ -880,6 +983,7 @@
 
     <!-- Header -->
     <div class="header">
+        <button class="header-back" id="headerBack" onclick="goBack()">‹</button>
         <div class="header-avatar"><img src="saved_images/img_114971a3e80b.jpg" alt="AI Avatar"></div>
         <div class="header-info">
             <div class="name">Make Your Work Easier</div>
@@ -898,41 +1002,42 @@
 
     <!-- Chat Container -->
     <div class="chat-container" id="chatContainer">
-        <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typingIndicator">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
     </div>
 
-    <!-- Skills Popup -->
-    <div class="skills-popup-overlay" id="skillsOverlay" onclick="closeSkillsPopup()"></div>
-    <div class="skills-popup" id="skillsPopup">
-        <div class="skills-popup-header">
-            <span>Skills</span>
-            <button class="skills-popup-close" onclick="closeSkillsPopup()">×</button>
-        </div>
-        <div class="skills-popup-list" id="skillsPopupList">
-            <div class="skills-popup-loading">Loading skills...</div>
-        </div>
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
     </div>
 
     <!-- Input Area -->
-    <div class="input-area">
-        <button class="emoji-btn" id="emojiBtn" onclick="toggleSkillsPopup()">☰</button>
+    <div class="input-area" id="inputArea">
         <div class="input-wrapper">
+            <button class="emoji-btn" id="emojiBtn" onclick="toggleSkillsPopup()">≡</button>
             <textarea id="messageInput" placeholder="Ketik pesan..." rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
         </div>
-        <button class="send-btn" onclick="sendMessage()">↑</button>
+
+        <!-- Skills Popup - inside input-area for natural positioning -->
+        <div class="skills-popup" id="skillsPopup">
+            <div class="skills-popup-header">
+                <span>Skills</span>
+                <button class="skills-popup-close" onclick="closeSkillsPopup()">X</button>
+            </div>
+            <div class="skills-popup-list" id="skillsPopupList">
+                <div class="skills-popup-loading">Loading skills...</div>
+            </div>
+        </div>
     </div>
 
+    <!-- Skills Overlay - outside so it covers full screen -->
+    <div class="skills-popup-overlay" id="skillsOverlay" onclick="closeSkillsPopup()"></div>
+
     <script>
-        // ===== SECURITY =====
-        const CORRECT_PIN = '1234'; // Change this PIN!
+        // ===== SECURE PIN SYSTEM - Server-side verification =====
         let isLocked = true;
         let failedAttempts = 0;
-        const MAX_ATTEMPTS = 5;
         let lockoutUntil = null;
         let pin = '';
 
@@ -964,6 +1069,116 @@
             });
         }
 
+        async function submitPin() {
+            if (lockoutUntil && Date.now() < lockoutUntil) {
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/verify-pin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({pin: pin})
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    isLocked = false;
+                    const lockScreen = document.getElementById('lockScreen');
+                    lockScreen.classList.add('hiding');
+                    setTimeout(() => {
+                        lockScreen.classList.add('hidden');
+                        lockScreen.classList.remove('hiding');
+                        document.querySelector('.header').classList.add('dashboard-enter');
+                        document.querySelector('.welcome-screen').classList.add('dashboard-enter');
+                        document.querySelector('.chat-container').classList.add('dashboard-enter');
+                        document.querySelector('.input-area').classList.add('dashboard-enter');
+                    }, 800);
+                } else {
+                    failedAttempts++;
+                    const dots = document.querySelectorAll('.pin-dot');
+                    dots.forEach(dot => {
+                        dot.style.animation = 'none';
+                        dot.offsetHeight;
+                        dot.style.animation = 'shake 0.5s ease';
+                    });
+                    pin = '';
+                    updatePinDots();
+
+                    if (data.locked) {
+                        lockoutUntil = Date.now() + data.remaining_seconds * 1000;
+                        alert('Terlalu banyak percobaan salah. Kunci selama ' + Math.ceil(data.remaining_seconds/60) + ' menit.');
+                    } else if (data.attempts_left !== undefined) {
+                        alert('PIN salah. Sisa percobaan: ' + data.attempts_left);
+                    }
+                }
+            } catch(e) {
+                alert('Verifikasi gagal: ' + e.message);
+            }
+        }
+
+        // ===== AUDIO SYSTEM - Notification Sound =====
+        let audioContext = null;
+
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch(e) {
+                console.log('Web Audio not supported:', e);
+            }
+        }
+
+        // Resume AudioContext on user interaction (browser policy)
+        function resumeAudio() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        // Web Audio API oscillator notification sound (WA-like pop)
+        function playNotificationSound() {
+            resumeAudio();
+            if (!audioContext) {
+                initAudio();
+            }
+            if (!audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch(e) {
+                console.log('Audio playback error:', e);
+            }
+        }
+
+        // Android native notification sound via ToneGenerator bridge
+        function playNativeSound() {
+            if (window.AndroidBridge && window.AndroidBridge.playTone) {
+                try {
+                    window.AndroidBridge.playTone('notification', 800, 300);
+                } catch(e) {
+                    console.log('AndroidBridge error:', e);
+                }
+            }
+        }
+
+        // Initialize audio on first user interaction
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+
+
         // Quote typing animation
         const quote = '"Your work is going to fill a large part of your life… the only way to be truly satisfied is to do what you believe is great work." — Steve Jobs';
         let charIndex = 0;
@@ -973,7 +1188,7 @@
             if (charIndex < quote.length) {
                 quoteElement.innerHTML = quote.substring(0, charIndex + 1) + '<span class="cursor"></span>';
                 charIndex++;
-                setTimeout(typeQuote, 35);
+                setTimeout(typeQuote, 20);
             } else {
                 quoteElement.innerHTML = quote;
             }
@@ -997,50 +1212,6 @@
             return true;
         }
 
-        function handlePinKeyDown(e) {
-            if (e.key === 'Enter') {
-                submitPin();
-            }
-        }
-
-        function submitPin() {
-            if (lockoutUntil && Date.now() < lockoutUntil) {
-                return;
-            }
-
-            if (pin === CORRECT_PIN) {
-                isLocked = false;
-                const lockScreen = document.getElementById('lockScreen');
-                lockScreen.classList.add('hiding');
-
-                // After lock screen animation, hide it and start dashboard
-                setTimeout(() => {
-                    lockScreen.classList.add('hidden');
-                    lockScreen.classList.remove('hiding');
-
-                    // Start dashboard animation
-                    document.querySelector('.header').classList.add('dashboard-enter');
-                    document.querySelector('.welcome-screen').classList.add('dashboard-enter');
-                    document.querySelector('.chat-container').classList.add('dashboard-enter');
-                    document.querySelector('.input-area').classList.add('dashboard-enter');
-                }, 800);
-            } else {
-                failedAttempts++;
-                // Shake dots on wrong PIN
-                const dots = document.querySelectorAll('.pin-dot');
-                dots.forEach(dot => {
-                    dot.style.animation = 'none';
-                    dot.offsetHeight;
-                    dot.style.animation = 'shake 0.5s ease';
-                });
-                pin = '';
-                updatePinDots();
-
-                if (failedAttempts >= MAX_ATTEMPTS) {
-                    lockoutUntil = Date.now() + 5 * 60 * 1000;
-                }
-            }
-        }
 
         // XSS Protection
         function escapeHtml(text) {
@@ -1060,19 +1231,23 @@
 
         // ===== SKILLS BAR =====
         const SKILL_ICONS = {
-            'awp': '⚡', 'awp-skill': '🎯', 'awp-wallet': '💰',
-            'github': '🐙', 'gitlab': '🦊', 'docker': '🐳',
-            'kubernetes': '☸️', 'linux': '🐧', 'python': '🐍',
-            'javascript': '📜', 'typescript': '📘', 'react': '⚛️',
-            'nodejs': '🟢', 'aws': '☁️', 'gcp': '☁️', 'azure': '☁️',
-            'mysql': '🗄️', 'postgres': '🐘', 'mongodb': '🍃',
-            'redis': '📦', 'elasticsearch': '🔍', 'kafka': '📨',
-            'graphql': '🔷', 'rest': '🌐', 'websocket': '🔌',
-            'html': '🌐', 'css': '🎨', 'tailwind': '🎨',
-            'git': '📋', 'ci-cd': '🔄', 'jenkins': '🏗️',
-            'terraform': '🏔️', 'ansible': '⚙️', 'prometheus': '📊',
-            'grafana': '📈', 'default': '🔧'
+            'awp': '[A]', 'predict-worknet': '[P]', 'mine': '[M]',
+            'github': '[GH]', 'gitlab': '[GL]', 'docker': '[D]',
+            'kubernetes': '[K8]', 'linux': '[L]', 'python': '[Py]',
+            'javascript': '[JS]', 'typescript': '[TS]', 'react': '[R]',
+            'nodejs': '[N]', 'aws': '[AWS]', 'gcp': '[GCP]', 'azure': '[AZ]',
+            'mysql': '[SQL]', 'postgres': '[PG]', 'mongodb': '[MG]',
+            'redis': '[R]', 'elasticsearch': '[ES]', 'kafka': '[K]',
+            'graphql': '[GQL]', 'rest': '[REST]', 'websocket': '[WS]',
+            'html': '[H]', 'css': '[CSS]', 'tailwind': '[TW]',
+            'git': '[G]', 'ci-cd': '[CI]', 'jenkins': '[JK]',
+            'terraform': '[TF]', 'ansible': '[A]', 'prometheus': '[PM]',
+            'grafana': '[G]', 'default': '[S]'
         };
+
+        function getSkillIcon(name) {
+            return SKILL_ICONS[name] || SKILL_ICONS[name.split('-')[0]] || SKILL_ICONS['default'];
+        }
 
         function getSkillIcon(name) {
             return SKILL_ICONS[name] || SKILL_ICONS[name.split('-')[0]] || SKILL_ICONS['default'];
@@ -1081,7 +1256,11 @@
         function loadSkills() {
             fetch('/api/skills')
                 .then(r => r.json())
-                .then(skills => populateSkillsPopup(skills))
+                .then(skills => {
+                    // Only show tools (non-hermes category)
+                    const tools = skills.filter(s => s.category !== 'hermes');
+                    populateSkillsPopup(tools);
+                })
                 .catch(() => {
                     document.getElementById('skillsPopupList').innerHTML = '<div class="skills-popup-error">Error loading skills</div>';
                 });
@@ -1115,7 +1294,7 @@
                 <div class="skills-popup-item" onclick="selectSkill('${escapeHtml(skill.name)}')">
                     <div class="skill-info">
                         <div class="skill-name">${escapeHtml(skill.name)}</div>
-                        <div class="skill-desc">${escapeHtml(skill.description)}</div>
+                        <div class="skill-desc">${escapeHtml(skill.desc || '')}</div>
                     </div>
                 </div>
             `).join('');
@@ -1205,16 +1384,6 @@
             return div.innerHTML;
         }
 
-        // Show typing indicator
-        function showTyping() {
-            document.getElementById('typingIndicator').classList.add('active');
-        }
-
-        // Hide typing indicator
-        function hideTyping() {
-            document.getElementById('typingIndicator').classList.remove('active');
-        }
-
         // Update streaming message in real-time
         function updateStreamingMessage(text) {
             const container = document.getElementById('chatContainer');
@@ -1281,9 +1450,23 @@
         }
 
         // Start chat
+        function goBack() {
+            hideTyping();
+            const welcome = document.getElementById('welcomeScreen');
+            welcome.style.display = 'flex';
+            welcome.classList.remove('hidden');
+            const container = document.getElementById('chatContainer');
+            container.innerHTML = '';
+            document.getElementById('headerBack').classList.remove('visible');
+            const input = document.getElementById('messageInput');
+            input.value = '';
+            hideSkillsPopup();
+        }
+
         function startChat() {
             const welcome = document.getElementById('welcomeScreen');
             welcome.classList.add('hidden');
+            document.getElementById('headerBack').classList.add('visible');
             // After animation, set display:none
             setTimeout(() => {
                 welcome.style.display = 'none';
@@ -1315,21 +1498,15 @@
             input.value = '';
             input.style.height = 'auto';
 
-            // Show typing
+            // Show typing indicator
             showTyping();
 
             // Send to AI
             sendToAI(text);
         }
 
-        // Show/hide typing indicator
-        function showTyping() {
-            document.getElementById('typingIndicator').classList.add('active');
-        }
-
-        function hideTyping() {
-            document.getElementById('typingIndicator').classList.remove('active');
-        }
+        function showTyping() { document.getElementById('loadingIndicator').classList.add('active'); }
+        function hideTyping() { document.getElementById('loadingIndicator').classList.remove('active'); }
 
         // Send message to AI backend
         function sendToAI(text) {
@@ -1346,7 +1523,7 @@
 
         // Connect to WebSocket
         function connectWS(initialMessage = null) {
-            const wsUrl = `ws://${window.location.hostname}:5001`;
+            const wsUrl = `ws://${window.location.hostname}/ws`;
 
             try {
                 ws = new WebSocket(wsUrl);
@@ -1374,10 +1551,12 @@
                             }
                         } else if (data.type === 'stream') {
                             // Stream response in real-time
+                            hideTyping(); // Hide loading indicator when stream starts
                             streamBuffer += data.chunk;
                             updateStreamingMessage(streamBuffer);
                         } else if (data.type === 'response') {
                             // Final response
+                            playNotificationSound();
                             addMessage(data.message, 'recv');
                             streamBuffer = '';
                             // Show choice buttons if provided
@@ -1388,6 +1567,7 @@
                             addMessage('Maaf, terjadi kesalahan. Coba lagi ya.', 'recv');
                         }
                     } catch {
+                        playNotificationSound();
                         addMessage(event.data, 'recv');
                     }
                 };
@@ -1420,6 +1600,7 @@
             .then(r => r.json())
             .then(d => {
                 hideTyping();
+                playNotificationSound();
                 addMessage(d.response || d.reply || 'Maaf, saya tidak bisa menjawab sekarang.', 'recv');
             })
             .catch(() => {
