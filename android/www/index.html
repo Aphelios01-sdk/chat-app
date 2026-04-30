@@ -1639,7 +1639,10 @@
             const lock = document.getElementById('lockScreen');
             if (lock) lock.classList.add('hidden');
             const welcome = document.getElementById('welcomeScreen');
-            if (welcome) welcome.classList.remove('hidden');
+            if (welcome) {
+                welcome.classList.remove('hidden');
+                welcome.classList.add('dashboard-enter');
+            }
         } catch(e) {
             alert('Setup error: ' + e.message);
         }
