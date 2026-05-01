@@ -736,6 +736,57 @@
    954|    </style>
    955|</head>
    956|<body>
+    <!-- Header -->
+    <div class="header">
+        <button class="header-back" id="headerBack" onclick="goBack()">‹</button>
+        <div class="header-avatar"><img src="https://raw.githubusercontent.com/Aphelios01-sdk/chat-app/main/android/www/saved_images/img_114971a3e80b.jpg" alt="AI Avatar"></div>
+        <div class="header-info">
+            <div class="name">Make Your Work Easier</div>
+            <div class="status" id="statusText">online</div>
+        </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <img src="https://raw.githubusercontent.com/Aphelios01-sdk/chat-app/main/android/www/saved_images/img_114971a3e80b.jpg" class="welcome-icon" alt="AI">
+        <h2>Make Your Work Easier</h2>
+        <p>L = Σ(y - y_pred)² + λ Σ(w²)</p>
+        <button class="start-btn" onclick="startChat()">Mulai Chat</button>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area" id="inputArea">
+        <div class="input-wrapper">
+            <button class="emoji-btn" id="emojiBtn" onclick="toggleSkillsPopup()">≡</button>
+            <textarea id="messageInput" placeholder="Ketik pesan..." rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+        </div>
+        <!-- Skills Popup -->
+        <div class="skills-popup" id="skillsPopup">
+            <div class="skills-popup-header">
+                <span>Skills</span>
+                <button class="skills-popup-close" onclick="closeSkillsPopup()">X</button>
+            </div>
+            <div class="skills-popup-list" id="skillsPopupList">
+                <div class="skills-popup-loading">Loading skills...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Overlay -->
+    <div class="skills-popup-overlay" id="skillsOverlay" onclick="closeSkillsPopup()"></div>
+
   1230|
   1231|        // XSS Protection
   1232|        function escapeHtml(text) {
