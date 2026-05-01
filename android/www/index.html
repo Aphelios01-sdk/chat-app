@@ -1586,6 +1586,12 @@
                     // Use HTTP fallback - set online since API works
                     document.getElementById('statusText').textContent = 'online';
                 };
+
+                ws.onerror = () => {
+                    hideTyping();
+                    // If WS fails, use HTTP fallback
+                    useFetchAPI(initialMessage);
+                };
             } catch (e) {
                 hideTyping();
                 useFetchAPI(initialMessage);
