@@ -967,7 +967,7 @@
           }
           // Connect to WebSocket
           function connectWS(initialMessage = null) {
-              const wsUrl = `wss://burlington-cabinet-correct-vertex.trycloudflare.com/ws`;
+              const wsUrl = `wss://prepared-neighborhood-blues-people.trycloudflare.com/ws`;
               try {
                   ws = new WebSocket(wsUrl);
                   ws.onopen = () => {
@@ -1028,7 +1028,7 @@
               }
           }
           // Fallback: Use fetch API (always use absolute URL to VPS)
-          const API_BASE = 'https://burlington-cabinet-correct-vertex.trycloudflare.com';
+          const API_BASE = 'https://prepared-neighborhood-blues-people.trycloudflare.com';
           function useFetchAPI(message) {
               fetch(API_BASE + '/api/chat', {
                   method: 'POST',
