@@ -1583,21 +1583,8 @@
 
                 ws.onclose = () => {
                     connected = false;
-                    document.getElementById('statusText').textContent = 'offline';
-                    // Try to reconnect after 3 seconds
-                    setTimeout(() => connectWS(), 3000);
-                };
-
-                ws.onerror = () => {
-                    hideTyping();
-                    // If WS not available, use fetch API
-                    useFetchAPI(initialMessage);
-                };
-
-                ws.onclose = () => {
-                    connected = false;
-                    document.getElementById('statusText').textContent = 'offline';
-                    // Don't auto-reconnect - use HTTP fallback instead
+                    // Use HTTP fallback - set online since API works
+                    document.getElementById('statusText').textContent = 'online';
                 };
             } catch (e) {
                 hideTyping();
