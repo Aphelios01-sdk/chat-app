@@ -1075,12 +1075,16 @@
             }
 
             try {
-                const resp = await fetch('https://lambdachatvps.loca.lt/api/verify-pin', {
+                const url = 'https://lambdachatvps.loca.lt/api/verify-pin';
+                console.log('Fetching:', url);
+                const resp = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({pin: pin})
                 });
+                console.log('Response status:', resp.status);
                 const data = await resp.json();
+                console.log('Response data:', data);
 
                 if (data.success) {
                     isLocked = false;
@@ -1113,6 +1117,7 @@
                     }
                 }
             } catch(e) {
+                console.error('Verify error:', e);
                 alert('Verifikasi gagal: ' + e.message);
             }
         }
