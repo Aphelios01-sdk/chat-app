@@ -1371,7 +1371,7 @@ async def handler(websocket):
 - Pendek dan langsung, jangan bertele-tele
 - JANGAN tampilkan alur berpikir / reasoning / thought process sama sekali
 - Jangan pakai emoji
-- Jangan pakai markdown formatting (**bold**, ## headers, *italics*, -, numbered lists)
+- Plain text only. NO formatting symbols: tidak pakai ** * ## - atau numbered lists
 - Kalau jawab pertanyaan, langsung kasih jawaban
 - Kalau perlu penjelasan, singkat aja
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
@@ -1647,7 +1647,7 @@ async def http_handler(request):
 - Pendek dan langsung, jangan bertele-tele
 - JANGAN tampilkan alur berpikir / reasoning / thought process sama sekali
 - Jangan pakai emoji
-- Jangan pakai markdown formatting (**bold**, ## headers, *italics*, -, numbered lists)
+- Plain text only. NO formatting symbols: tidak pakai ** * ## - atau numbered lists
 - Kalau jawab pertanyaan, langsung kasih jawaban
 - Kalau perlu penjelasan, singkat aja
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
@@ -1843,8 +1843,24 @@ async def main():
     if not MINIMAX_API_KEY:
         print("WARNING: No MINIMAX_API_KEY found!")
 
+    # CORS middleware for aiohttp
+    @web.middleware
+    async def cors_middleware(request, handler):
+        if request.method == 'OPTIONS':
+            return web.Response(
+                headers={
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Max-Age': '86400',
+                }
+            )
+        resp = await handler(request)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
+
     # HTTP server for /api/chat and /api/skills on port 5002
-    http_app = web.Application()
+    http_app = web.Application(middlewares=[cors_middleware])
     http_app.router.add_post("/api/chat", http_handler)
     http_app.router.add_get("/api/skills", skills_handler)
     http_app.router.add_get("/api/messages/count", messages_count_handler)  # For Android service

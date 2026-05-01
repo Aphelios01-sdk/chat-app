@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Debug Chat</title>
+<style>
+body { font-family: monospace; background: #1a1a1a; color: white; padding: 20px; }
+#log { border: 1px solid #333; padding: 10px; height: 300px; overflow-y: auto; }
+.msg { padding: 5px; margin: 2px; border-radius: 5px; }
+.sent { background: white; color: black; text-align: right; }
+.recv { background: #333; }
+</style>
+</head>
+<body>
+<h3>Debug Chat</h3>
+<div id="log"></div>
+<script>
+function log(msg) {
+    document.getElementById('log').innerHTML += '<div class="msg">' + msg + '</div>';
+}
+
+// Test addMessage
+function addMessage(text, type) {
+    const container = document.getElementById('log');
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.textContent = '[' + type + '] ' + text;
+    container.appendChild(div);
+    log('appendChild called, childCount=' + container.children.length);
+}
+
+log('Page loaded');
+log('Testing addMessage...');
+addMessage('Hello', 'sent');
+addMessage('World', 'recv');
+log('Done');
+</script>
+</body>
+</html>

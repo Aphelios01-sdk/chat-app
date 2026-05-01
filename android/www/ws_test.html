@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Minimal WS Test</title>
+</head>
+<body>
+<h3>WS Chat Test</h3>
+<div id="chat" style="border:1px solid #ccc;padding:10px;height:300px;overflow-y:auto;"></div>
+<input id="msg" placeholder="Type message..." onkeydown="if(event.key==='Enter')send()">
+<button onclick="send()">Send</button>
+<script>
+const chat = document.getElementById('chat');
+let ws;
+
+function log(txt) {
+    chat.innerHTML += '<p>' + txt + '</p>';
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function send() {
+    const text = document.getElementById('msg').value.trim();
+    if (!text) return;
+    document.getElementById('msg').value = '';
+    log('SENT: ' + text);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type:'chat', message:text}));
+    } else {
+        log('WS not connected!');
+    }
+}
+
+ws = new WebSocket('ws://' + location.host + ':5001');
+ws.onopen = () => log('WS CONNECTED');
+ws.onmessage = (e) => {
+    log('RECV: ' + e.data.substring(0, 200));
+    try {
+        const d = JSON.parse(e.data);
+        if (d.type === 'response') {
+            log('AI: ' + d.message.substring(0, 100));
+        }
+    } catch(e) {}
+};
+ws.onclose = () => log('WS CLOSED');
+ws.onerror = (e) => log('WS ERROR');
+</script>
+</body>
+</html>

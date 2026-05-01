@@ -1036,7 +1036,7 @@
 
     <script>
         // ===== SECURE PIN SYSTEM - Server-side verification =====
-        let isLocked = false;
+        let isLocked = true;
         let failedAttempts = 0;
         let lockoutUntil = null;
         let pin = '';
@@ -1645,18 +1645,7 @@
         // Prevent right-click context menu (security)
         // document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // DEBUG: show welcome screen always (for testing)
-        try {
-            const lock = document.getElementById('lockScreen');
-            if (lock) lock.classList.add('hidden');
-            const welcome = document.getElementById('welcomeScreen');
-            if (welcome) {
-                welcome.classList.remove('hidden');
-                welcome.classList.add('dashboard-enter');
-            }
-        } catch(e) {
-            alert('Setup error: ' + e.message);
-        }
+
     </script>
 </body>
 </html>
