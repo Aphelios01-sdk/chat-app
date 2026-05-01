@@ -1075,7 +1075,7 @@
             }
 
             try {
-                const resp = await fetch('http://43.156.57.226/api/verify-pin', {
+                const resp = await fetch('https://lambdachatvps.loca.lt/api/verify-pin', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({pin: pin})
