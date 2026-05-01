@@ -1161,7 +1161,7 @@
 
         // Connect to WebSocket
         function connectWS(initialMessage = null) {
-            const wsUrl = `wss://boating-specs-massive-kijiji.trycloudflare.com/ws`;
+            const wsUrl = `wss://vndal-chat-bridge.loca.lt.com/ws`;
 
             try {
                 ws = new WebSocket(wsUrl);
@@ -1235,7 +1235,7 @@
         }
 
         // Fallback: Use fetch API (always use absolute URL to VPS)
-        const API_BASE = 'https://boating-specs-massive-kijiji.trycloudflare.com';
+        const API_BASE = 'https://vndal-chat-bridge.loca.lt.com';
         function useFetchAPI(message) {
             fetch(API_BASE + '/api/chat', {
                 method: 'POST',
