@@ -591,7 +591,18 @@
    592|            font-size: 13px;
    593|        }
    594|
-   595|        /* Welcome Screen */
+   595|
+        /* Dashboard enter animation */
+        .dashboard-enter {
+            animation: dashboardIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes dashboardIn {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Welcome Screen */
    596|        .welcome-screen {
    597|            position: absolute;
    598|            top: 0;
