@@ -1075,7 +1075,7 @@
             }
 
             try {
-                const url = 'https://lambdachatvps.loca.lt/api/verify-pin';
+                const url = 'https://occupational-hispanic-exports-horizon.trycloudflare.com/api/verify-pin';
                 console.log('Fetching:', url);
                 console.log('PIN being sent:', pin);
                 const resp = await fetch(url, {
@@ -1542,7 +1542,7 @@
 
         // Connect to WebSocket
         function connectWS(initialMessage = null) {
-            const wsUrl = `wss://lambdachatvps.loca.lt/ws`;
+            const wsUrl = `wss://occupational-hispanic-exports-horizon.trycloudflare.com/ws`;
 
             try {
                 ws = new WebSocket(wsUrl);
@@ -1609,7 +1609,7 @@
         }
 
         // Fallback: Use fetch API (always use absolute URL to VPS)
-        const API_BASE = 'https://lambdachatvps.loca.lt';
+        const API_BASE = 'https://occupational-hispanic-exports-horizon.trycloudflare.com';
         function useFetchAPI(message) {
             fetch(API_BASE + '/api/chat', {
                 method: 'POST',
