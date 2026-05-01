@@ -529,11 +529,6 @@
 
         /* Welcome Screen */
            .welcome-screen {
-               position: absolute;
-               top: 0;
-               left: 0;
-               right: 0;
-               bottom: 0;
                display: flex;
                flex-direction: column;
                align-items: center;
@@ -542,20 +537,10 @@
                text-align: center;
                background: var(--wa-bg);
                transition: opacity 0.3s ease, transform 0.3s ease;
-               z-index: 49;
+               flex: 1;
            }
            .welcome-screen.hidden {
-               animation: welcomeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-           }
-           @keyframes welcomeOut {
-               0% {
-                   opacity: 1;
-                   transform: translateY(0) scale(1);
-               }
-               100% {
-                   opacity: 0;
-                   transform: translateY(-20px) scale(0.95);
-               }
+               display: none;
            }
            .welcome-screen .welcome-icon {
                width: 80px;
@@ -913,20 +898,10 @@
               hideSkillsPopup();
           }
           function startChat() {
-              const welcome = document.getElementById('welcomeScreen');
-              welcome.classList.add('hidden');
+              document.getElementById('welcomeScreen').style.display = 'none';
               document.getElementById('headerBack').classList.add('visible');
-              // Make chat UI visible
-              document.querySelector('.header').classList.add('dashboard-enter');
-              document.querySelector('.chat-container').classList.add('dashboard-enter');
-              document.querySelector('.input-area').classList.add('dashboard-enter');
-              // After animation, set display:none
-              setTimeout(() => {
-                  welcome.style.display = 'none';
-              }, 400);
               addDateDivider();
               addMessage("Press /start when you want to start, remember the chat will be deleted if you close the tab or apk (still in beta stage)", 'recv');
-              // Put /start in input field for manual send
               const input = document.getElementById('messageInput');
               input.value = '/start';
               input.focus();
