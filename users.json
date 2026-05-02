@@ -1,0 +1,10 @@
+{
+  "test@test.com": {
+    "password": "ed80c61b4ffe4336f5092953cb7e27b5:ca9e28444539d1c2137b6750c9f94ac9662c1273afe8ab77e5662284ad07ac76",
+    "created_at": "2026-05-02T15:31:43.106756"
+  },
+  "budi@budi.com": {
+    "password": "b7839daf98d0a1511a200b67bb1b4f4e:3801328bdb5e16495555444e9402ee0d2692b16d1874d6e8563ee47a835b7bcb",
+    "created_at": "2026-05-02T15:31:54.928410"
+  }
+}
