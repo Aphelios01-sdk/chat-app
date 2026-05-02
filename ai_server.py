@@ -22,6 +22,34 @@ connected_clients = set()
 message_count = 0  # Track total messages sent to chat
 
 # ============================================================
+# IP CHAT LIMIT - 10 chats per IP per day (in-memory only)
+# ============================================================
+import datetime as dt
+
+CHAT_LIMITS = {}  # {ip: {"count": N, "date": "YYYY-MM-DD"}}
+MAX_CHATS_PER_DAY = 10
+
+def get_today_str():
+    return (dt.datetime.utcnow() + dt.timedelta(hours=7)).strftime("%Y-%m-%d")
+
+def check_chat_limit(ip: str) -> tuple[bool, int]:
+    """Returns (allowed, remaining). Checks and increments if allowed."""
+    today = get_today_str()
+    entry = CHAT_LIMITS.get(ip)
+    
+    # Reset if new day
+    if entry is None or entry["date"] != today:
+        CHAT_LIMITS[ip] = {"count": 0, "date": today}
+        entry = CHAT_LIMITS[ip]
+    
+    remaining = MAX_CHATS_PER_DAY - entry["count"]
+    if remaining <= 0:
+        return False, 0
+    
+    entry["count"] += 1
+    return True, remaining - 1
+
+# ============================================================
 # SECURE PIN SYSTEM - Server-side verification
 # ============================================================
 import secrets
@@ -1251,7 +1279,14 @@ async def handler(websocket):
     """Handle client connection"""
     client_id = id(websocket)
     connected_clients.add(client_id)
-    print(f"[+] Client {client_id} connected ({len(connected_clients)} online)")
+    
+    # Get client IP
+    try:
+        client_ip = websocket.remote_address[0]
+    except Exception:
+        client_ip = "unknown"
+    
+    print(f"[+] Client {client_id} ({client_ip}) connected ({len(connected_clients)} online)")
     
     # Separate memories for AI and User
     ai_memory = {
@@ -1300,6 +1335,21 @@ async def handler(websocket):
 
                 if data.get("type") == "chat":
                     user_msg = data.get("message", "")
+
+                    # IP chat limit check - only counts if there's actual message text
+                    if user_msg.strip():
+                        allowed, remaining = check_chat_limit(client_ip)
+                        if not allowed:
+                            await websocket.send(json.dumps({
+                                "type": "response",
+                                "message": f"Batas chat harian tercapai (10/10). Coba lagi besok jam 00:00 WIB. Sisa chat: {remaining}"
+                            }))
+                            continue
+                        if remaining <= 3:
+                            await websocket.send(json.dumps({
+                                "type": "response",
+                                "message": f"⚠ Sisa chat hari ini: {remaining}/10"
+                            }))
                     
                     # If client sends history, merge it into session
                     if data.get("history"):
