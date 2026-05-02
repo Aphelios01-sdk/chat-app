@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WS Test</title>
+<meta charset="UTF-8">
+<style>
+body { background: #111; color: #0f0; font-family: monospace; padding: 20px; }
+#log { border: 1px solid #333; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+.msg { margin: 4px 0; }
+.msg.sent { color: #0ff; }
+.msg.recv { color: #0f0; }
+.msg.err { color: #f00; }
+button { background: #0b5ed7; color: #fff; border: none; padding: 8px 16px; cursor: pointer; margin: 2px; }
+button:disabled { background: #555; }
+#chat { border: 1px solid #333; padding: 10px; height: 200px; overflow-y: auto; background: #000; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h3>🔌 WebSocket Browser Test</h3>
+<div id="chat"></div>
+<input type="text" id="msgInput" placeholder="Type message..." style="width:60%;padding:8px;background:#222;color:#0f0;border:1px solid #333">
+<button onclick="send()" id="sendBtn">Send</button>
+<button onclick="testWS()">Test WS</button>
+<button onclick="testFetch()">Test Fetch</button>
+<button onclick="testAddMsg()">Test addMessage()</button>
+<button onclick="clearLog()">Clear</button>
+<div id="log"></div>
+<script>
+const logEl = document.getElementById('log');
+const chatEl = document.getElementById('chat');
+let ws = null;
+
+function log(msg, type='info') {
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.textContent = new Date().toISOString().substr(11,8) + ' ' + msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() { logEl.innerHTML = ''; }
+
+// Test addMessage function
+function testAddMsg() {
+    log('Testing addMessage()...', 'info');
+    try {
+        addMessage('TEST - Sent message dari browser', 'sent');
+        addMessage('TEST - Received message dari browser', 'recv');
+        log('addMessage() OK', 'info');
+    } catch(e) {
+        log('addMessage() ERROR: ' + e.message, 'err');
+    }
+}
+
+// Simulated addMessage from actual app
+function addMessage(text, type) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message-wrapper ' + type;
+    const time = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    if (type === 'sent') {
+        wrapper.innerHTML = '<div class="message sent"><div class="text">'+escapeHtml(text)+'</div><div class="meta"><span>'+time+'</span><span class="read-status">✓✓</span></div></div>';
+    } else {
+        wrapper.innerHTML = '<div class="message recv"><div class="text">'+escapeHtml(text)+'</div><div class="meta"><span>'+time+'</span></div></div>';
+    }
+    chatEl.appendChild(wrapper);
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Test HTTP fetch
+async function testFetch() {
+    log('Testing HTTP fetch...', 'info');
+    try {
+        const resp = await fetch('http://43.156.57.226/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: '/start'})
+        });
+        const data = await resp.json();
+        log('Fetch OK: ' + JSON.stringify(data).substring(0, 100), 'info');
+    } catch(e) {
+        log('Fetch ERROR: ' + e.message, 'err');
+    }
+}
+
+// Test WebSocket
+function testWS() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        log('WS already open', 'info');
+        return;
+    }
+    log('Connecting to ws://43.156.57.226/ws ...', 'info');
+    ws = new WebSocket('ws://43.156.57.226/ws');
+
+    const timeout = setTimeout(() => {
+        log('WS timeout after 8s', 'err');
+        ws.close();
+    }, 8000);
+
+    ws.onopen = () => {
+        clearTimeout(timeout);
+        log('WS ONOPEN - connected!', 'info');
+        document.getElementById('sendBtn').disabled = false;
+        // Send /start
+        ws.send(JSON.stringify({type: 'chat', message: '/start'}));
+        log('Sent /start', 'info');
+    };
+
+    ws.onmessage = (event) => {
+        log('WS MSG: ' + event.data.substring(0, 150), 'recv');
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'response' || data.type === 'stream') {
+                addMessage('[AI] ' + (data.message || data.chunk || '').substring(0, 100), 'recv');
+            }
+        } catch(e) {}
+    };
+
+    ws.onerror = (e) => {
+        clearTimeout(timeout);
+        log('WS ERROR: ' + JSON.stringify(e), 'err');
+    };
+
+    ws.onclose = (e) => {
+        clearTimeout(timeout);
+        log('WS CLOSED: code=' + e.code + ' reason=' + (e.reason||'none'), 'err');
+        document.getElementById('sendBtn').disabled = true;
+    };
+}
+
+function send() {
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+    addMessage(text, 'sent');
+    document.getElementById('msgInput').value = '';
+    ws.send(JSON.stringify({type: 'chat', message: text}));
+}
+
+document.getElementById('msgInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') send();
+});
+
+// Auto test on load
+window.addEventListener('load', () => {
+    log('Page loaded - click "Test WS" to start', 'info');
+    document.getElementById('sendBtn').disabled = true;
+});
+</script>
+</body>
+</html>

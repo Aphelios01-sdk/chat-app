@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WS Debug</title>
+</head>
+<body>
+<h3>WS Debug Test</h3>
+<div id="log" style="font-family:monospace;background:#000;color:#0f0;padding:10px;height:300px;overflow:auto"></div>
+<script>
+function log(msg) {
+    document.getElementById('log').innerHTML += '<br>' + msg;
+}
+let ws;
+function connect() {
+    log('Connecting to ws://43.156.57.226/ws...');
+    ws = new WebSocket('ws://43.156.57.226/ws');
+    ws.onopen = () => {
+        log('ONOPEN - Connected!');
+        setTimeout(() => {
+            log('Sending /start...');
+            ws.send(JSON.stringify({type:'chat',message:'/start'}));
+        }, 500);
+    };
+    ws.onmessage = (e) => log('ONMESSAGE: ' + e.data);
+    ws.onerror = (e) => log('ONERROR: ' + JSON.stringify(e));
+    ws.onclose = () => log('ONCLOSE');
+}
+connect();
+</script>
+</body>
+</html>

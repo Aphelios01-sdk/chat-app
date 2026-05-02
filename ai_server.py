@@ -1282,6 +1282,22 @@ async def handler(websocket):
                     }))
                     continue
 
+                # Handle phone registration from Lambda app
+                if data.get("type") == "phone" or (data.get("type") == "chat" and not data.get("message")):
+                    # Lambda app connects with phone number
+                    phone = data.get("phone", "")
+                    session_messages = []
+                    response_text = "Silakan pilih bahasa untuk melanjutkan:"
+                    await websocket.send(json.dumps({
+                        "type": "response",
+                        "message": response_text,
+                        "choices": [
+                            {"label": "Indonesia", "value": "Indonesia"},
+                            {"label": "English", "value": "English"}
+                        ]
+                    }))
+                    continue
+
                 if data.get("type") == "chat":
                     user_msg = data.get("message", "")
                     

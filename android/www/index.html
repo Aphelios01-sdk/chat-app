@@ -611,7 +611,18 @@
         }
 
         .welcome-screen.hidden {
-            display: none;
+            animation: welcomeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes welcomeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
         }
 
         .welcome-screen .welcome-icon {
@@ -682,6 +693,233 @@
         }
 
         /* PIN Lock Screen Grok Style - Full Black */
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            will-change: opacity, transform;
+            opacity: 1;
+        }
+
+        .lock-screen.hiding {
+            animation: lockScreenOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes lockScreenOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.08) translateY(-20px);
+            }
+        }
+
+        .lock-screen.hidden {
+            display: none;
+        }
+
+        /* Dashboard slide in - HIDDEN initially */
+        .header, .welcome-screen, .chat-container, .input-area {
+            will-change: transform, opacity;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .dashboard-enter {
+            animation: dashboardIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            visibility: visible;
+        }
+
+        @keyframes dashboardIn {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .lock-screen .lock-icon {
+            font-size: 72px;
+            margin-bottom: 40px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            color: #FFFFFF;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .quote-text {
+            opacity: 0.5;
+        }
+
+        .quote-text .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 14px;
+            background: #FFFFFF;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        .lock-screen h3 {
+            color: #FFFFFF;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            margin-bottom: 35px;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            line-height: 1.7;
+            opacity: 0.9;
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .lock-screen input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 16px 24px;
+            font-size: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            color: #FFFFFF;
+            text-align: center;
+            width: 200px;
+            letter-spacing: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        /* PIN Dots */
+        .pin-dots {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            transition: all 0.15s ease;
+        }
+
+        .pin-dot.filled {
+            background: #FFFFFF;
+            border-color: #FFFFFF;
+        }
+
+        /* Numpad */
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 280px;
+        }
+
+        .numpad-btn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: #FFFFFF;
+            font-size: 26px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .numpad-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .numpad-btn:active {
+            background: rgba(255,255,255,0.25);
+            transform: scale(0.95);
+        }
+
+        .numpad-btn.numpad-empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .numpad-btn.numpad-delete {
+            font-size: 22px;
+        }
+
+        .lock-screen .submit-btn {
+            margin-top: 40px;
+            background: transparent;
+            color: #FFFFFF;
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            cursor: pointer;
+            max-width: 340px;
+            line-height: 1.8;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .lock-screen .submit-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.5);
+            transform: scale(1.02);
+        }
+
+        .lock-screen .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .lock-screen::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+
         /* Loading indicator - bottom */
         .loading-indicator {
             display: none;
@@ -716,11 +954,37 @@
     </style>
 </head>
 <body>
+    <!-- PIN Lock Screen -->
+    <div class="lock-screen hidden" id="lockScreen">
+        <div class="lock-icon">λ</div>
+        <h3><span id="quoteText"></span></h3>
+        <div class="pin-dots" id="pinDots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+        </div>
+        <div class="numpad">
+            <button class="numpad-btn" onclick="addPin('1')">1</button>
+            <button class="numpad-btn" onclick="addPin('2')">2</button>
+            <button class="numpad-btn" onclick="addPin('3')">3</button>
+            <button class="numpad-btn" onclick="addPin('4')">4</button>
+            <button class="numpad-btn" onclick="addPin('5')">5</button>
+            <button class="numpad-btn" onclick="addPin('6')">6</button>
+            <button class="numpad-btn" onclick="addPin('7')">7</button>
+            <button class="numpad-btn" onclick="addPin('8')">8</button>
+            <button class="numpad-btn" onclick="addPin('9')">9</button>
+            <button class="numpad-btn numpad-empty"></button>
+            <button class="numpad-btn" onclick="addPin('0')">0</button>
+            <button class="numpad-btn numpad-delete" onclick="deletePin()">⌫</button>
+        </div>
+        <button class="submit-btn" onclick="submitPin()">BUKA</button>
+    </div>
+
     <!-- Header -->
-    <!-- Header -->
-    <div class="header">
+        <div class="header" ontouchend="window.__debugTapCount++; if(window.__debugTapCount>=5){debugVisible=!debugVisible; var el=document.getElementById('debugLog'); if(el)el.style.display=debugVisible?'block':'none';} setTimeout(()=>window.__debugTapCount=0,2000);">
         <button class="header-back" id="headerBack" onclick="goBack()">‹</button>
-        <div class="header-avatar"><img src="https://raw.githubusercontent.com/Aphelios01-sdk/chat-app/main/android/www/saved_images/img_114971a3e80b.jpg" alt="AI Avatar"></div>
+        <div class="header-avatar" onclick="window.__debugTapCount++; if(window.__debugTapCount>=5){debugVisible=!debugVisible; var el=document.getElementById('debugLog'); if(el)el.style.display=debugVisible?'block':'none';} setTimeout(()=>window.__debugTapCount=0,2000);"><img src="saved_images/img_114971a3e80b.jpg" alt="AI Avatar"></div>
         <div class="header-info">
             <div class="name">Make Your Work Easier</div>
             <div class="status" id="statusText">online</div>
@@ -730,7 +994,7 @@
 
     <!-- Welcome Screen -->
     <div class="welcome-screen" id="welcomeScreen">
-        <img src="https://raw.githubusercontent.com/Aphelios01-sdk/chat-app/main/android/www/saved_images/img_114971a3e80b.jpg" class="welcome-icon" alt="AI">
+        <img src="saved_images/img_114971a3e80b.jpg" class="welcome-icon" alt="AI">
         <h2>Make Your Work Easier</h2>
         <p>L = Σ(y - y_pred)² + λ Σ(w²)</p>
         <button class="start-btn" onclick="startChat()">Mulai Chat</button>
@@ -746,6 +1010,12 @@
         <div class="dot"></div>
         <div class="dot"></div>
     </div>
+
+    <!-- Debug Log (hidden by default, tap header 5x to show) -->
+    <div id="debugLog" style="display:none; position:fixed; bottom:60px; left:5px; right:5px; background:#111; color:#0f0; font-size:10px; padding:6px; border-radius:4px; z-index:9999; font-family:monospace; max-height:80px; overflow-y:auto;"></div>
+    
+    <!-- Tap counter to reveal debug -->
+    <script>window.__debugTapCount=0;</script>
 
     <!-- Input Area -->
     <div class="input-area" id="inputArea">
@@ -771,6 +1041,88 @@
     <div class="skills-popup-overlay" id="skillsOverlay" onclick="closeSkillsPopup()"></div>
 
     <script>
+        // ===== SECURE PIN SYSTEM - Server-side verification =====
+        let isLocked = false;
+        let failedAttempts = 0;
+        let lockoutUntil = null;
+        let pin = '';
+
+        function addPin(digit) {
+            if (pin.length < 4) {
+                pin += digit;
+                updatePinDots();
+                if (pin.length === 4) {
+                    setTimeout(submitPin, 100);
+                }
+            }
+        }
+
+        function deletePin() {
+            if (pin.length > 0) {
+                pin = pin.slice(0, -1);
+                updatePinDots();
+            }
+        }
+
+        function updatePinDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, i) => {
+                if (i < pin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        async function submitPin() {
+            if (lockoutUntil && Date.now() < lockoutUntil) {
+                return;
+            }
+
+            try {
+                const resp = await fetch('http://43.156.57.226/api/verify-pin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({pin: pin})
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    isLocked = false;
+                    const lockScreen = document.getElementById('lockScreen');
+                    lockScreen.classList.add('hiding');
+                    setTimeout(() => {
+                        lockScreen.classList.add('hidden');
+                        lockScreen.classList.remove('hiding');
+                        document.querySelector('.header').classList.add('dashboard-enter');
+                        document.querySelector('.welcome-screen').classList.add('dashboard-enter');
+                        document.querySelector('.chat-container').classList.add('dashboard-enter');
+                        document.querySelector('.input-area').classList.add('dashboard-enter');
+                    }, 800);
+                } else {
+                    failedAttempts++;
+                    const dots = document.querySelectorAll('.pin-dot');
+                    dots.forEach(dot => {
+                        dot.style.animation = 'none';
+                        dot.offsetHeight;
+                        dot.style.animation = 'shake 0.5s ease';
+                    });
+                    pin = '';
+                    updatePinDots();
+
+                    if (data.locked) {
+                        lockoutUntil = Date.now() + data.remaining_seconds * 1000;
+                        alert('Terlalu banyak percobaan salah. Kunci selama ' + Math.ceil(data.remaining_seconds/60) + ' menit.');
+                    } else if (data.attempts_left !== undefined) {
+                        alert('PIN salah. Sisa percobaan: ' + data.attempts_left);
+                    }
+                }
+            } catch(e) {
+                alert('Verifikasi gagal: ' + e.message);
+            }
+        }
+
         // ===== AUDIO SYSTEM - Notification Sound =====
         let audioContext = null;
 
@@ -873,6 +1225,15 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Block if locked
+        function checkLock() {
+            if (isLocked) {
+                document.getElementById('pinInput').focus();
+            }
+        }
+
+        setInterval(checkLock, 1000);
 
         // ===== SKILLS BAR =====
         const SKILL_ICONS = {
@@ -1094,6 +1455,14 @@
             }
         }
 
+        // Init dashboard visibility (called when lock is bypassed)
+        function initDashboard() {
+            document.querySelector('.header').classList.add('dashboard-enter');
+            document.querySelector('.welcome-screen').classList.add('dashboard-enter');
+            document.querySelector('.chat-container').classList.add('dashboard-enter');
+            document.querySelector('.input-area').classList.add('dashboard-enter');
+        }
+
         // Start chat
         function goBack() {
             hideTyping();
@@ -1109,17 +1478,30 @@
         }
 
         function startChat() {
-            document.getElementById('welcomeScreen').style.display = 'none';
+            const welcome = document.getElementById('welcomeScreen');
+            welcome.classList.add('hidden');
             document.getElementById('headerBack').classList.add('visible');
+            // After animation, set display=none
+            setTimeout(() => {
+                welcome.style.display = 'none';
+            }, 400);
             addDateDivider();
             addMessage("Press /start when you want to start, remember the chat will be deleted if you close the tab or apk (still in beta stage)", 'recv');
-            const input = document.getElementById('messageInput');
-            input.value = '/start';
-            input.focus();
+            // Wait for animation to complete, then fill and auto-send /start
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                input.value = '/start';
+                input.focus();
+                // Small delay to ensure input is ready, then send
+                setTimeout(() => sendMessage(), 200);
+            }, 500);
         }
 
         // Send message
         function sendMessage() {
+            console.log('sendMessage() called');
+            showDebug('sendMessage() called, isLocked=' + isLocked);
+            if (isLocked) return;
 
             if (!checkRateLimit()) {
                 addMessage('⚠️ Terlalu banyak pesan. Tunggu sebentar.', 'recv');
@@ -1128,6 +1510,7 @@
 
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
+            console.log('sendMessage text:', text);
 
             if (!text) return;
 
@@ -1148,10 +1531,23 @@
 
         // Send message to AI backend
         function sendToAI(text) {
+            console.log('sendToAI called with:', text, 'ws readyState:', ws ? ws.readyState : 'null');
+            showDebug('sendToAI: ' + text + ', ws readyState=' + (ws ? ws.readyState : 'null'));
             // Connect to WebSocket if not connected
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
+            if (!ws || ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) {
+                console.log('WS not open, calling connectWS');
                 connectWS(text);
+            } else if (ws.readyState === WebSocket.CONNECTING) {
+                console.log('WS still connecting, queuing message');
+                showDebug('WS: still connecting, queuing...');
+                const checkOpen = setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        clearInterval(checkOpen);
+                        ws.send(JSON.stringify({type: 'chat', message: text}));
+                    }
+                }, 100);
             } else {
+                console.log('WS already open, sending directly');
                 ws.send(JSON.stringify({
                     type: 'chat',
                     message: text
@@ -1159,17 +1555,88 @@
             }
         }
 
+        // Debug: show last WS event on screen
+        let lastDebug = '';
+        let debugVisible = false;
+        function showDebug(msg) {
+            lastDebug = msg;
+            const el = document.getElementById('debugLog');
+            if (el) {
+                el.textContent = msg;
+                if (debugVisible) el.style.display = 'block';
+            }
+            console.log('DEBUG:', msg);
+        }
+        
+        function hideDebug() {
+            debugVisible = false;
+            const el = document.getElementById('debugLog');
+            if (el) el.style.display = 'none';
+        }
+
+        // Self-test on page load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                showDebug('PAGE LOADED OK - timestamp: ' + new Date().toISOString());
+                // Test if fetch works
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: 'ping'})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { showDebug('FETCH TEST OK: ' + JSON.stringify(d).substring(0, 80)); })
+                .catch(function(e) { showDebug('FETCH TEST ERR: ' + e); });
+            }, 1000);
+        });
+
         // Connect to WebSocket
         function connectWS(initialMessage = null) {
-            const wsUrl = `wss://vndal-chat-bridge.loca.lt.com/ws`;
+            // Prevent multiple simultaneous connections
+            if (ws && ws.readyState === WebSocket.CONNECTING) {
+                console.log('WS already connecting, queuing message');
+                showDebug('WS: already connecting, queuing...');
+                // Wait for existing connection then send
+                const checkOpen = setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        clearInterval(checkOpen);
+                        if (initialMessage) {
+                            ws.send(JSON.stringify({type: 'chat', message: initialMessage}));
+                        }
+                    }
+                }, 100);
+                return;
+            }
+
+            // Use wss:// if served from HTTPS, else ws:// for HTTP
+            const isHTTPS = window.location.protocol === 'https:';
+            const wsUrl = isHTTPS
+                ? `wss://lambdachatvps.loca.lt/ws`
+                : `ws://43.156.57.226/ws`;
+            showDebug('WS: connecting to ' + wsUrl);
 
             try {
                 ws = new WebSocket(wsUrl);
+                document.getElementById('statusText').textContent = 'connecting...';
+
+                // WS connection timeout - fallback to HTTP after 15s (increased from 5s)
+                const wsTimeout = setTimeout(() => {
+                    if (ws.readyState !== WebSocket.OPEN) {
+                        console.log('WS timeout, switching to HTTP fallback');
+                        showDebug('WS: timeout after 15s, using HTTP fallback');
+                        ws.close();
+                        hideTyping();
+                        useFetchAPI(initialMessage || '/start');
+                    }
+                }, 15000);
 
                 ws.onopen = () => {
+                    console.log('WS ONOPEN FIRED');
+                    clearTimeout(wsTimeout);
                     connected = true;
                     document.getElementById('statusText').textContent = 'online';
                     if (initialMessage) {
+                        console.log('SENDING INITIAL MSG:', initialMessage);
                         ws.send(JSON.stringify({
                             type: 'chat',
                             message: initialMessage
@@ -1178,10 +1645,13 @@
                 };
 
                 ws.onmessage = (event) => {
+                    console.log('WS MESSAGE RECEIVED:', event.data.substring(0, 300));
                     try {
                         const data = JSON.parse(event.data);
+                        console.log('WS PARSED:', JSON.stringify(data).substring(0, 200));
                         
                         if (data.type === 'typing') {
+                            showDebug('WS: got typing ' + data.status);
                             if (data.status === 'start') {
                                 showTyping();
                             } else {
@@ -1193,18 +1663,22 @@
                             streamBuffer += data.chunk;
                             updateStreamingMessage(streamBuffer);
                         } else if (data.type === 'response') {
+                            console.log('SHOWING RESPONSE:', data.message.substring(0, 80));
+                            showDebug('WS: got response: ' + data.message.substring(0, 80));
                             // Final response
                             playNotificationSound();
                             addMessage(data.message, 'recv');
                             streamBuffer = '';
                             // Show choice buttons if provided
                             if (data.choices && data.choices.length > 0) {
+                                showDebug('WS: showing ' + data.choices.length + ' choices');
                                 showChoices(data.choices);
                             }
                         } else if (data.type === 'error') {
                             addMessage('Maaf, terjadi kesalahan. Coba lagi ya.', 'recv');
                         }
-                    } catch {
+                    } catch(e) {
+                        console.log('WS PARSE ERROR:', e.message, event.data);
                         playNotificationSound();
                         addMessage(event.data, 'recv');
                     }
@@ -1217,27 +1691,26 @@
                     setTimeout(() => connectWS(), 3000);
                 };
 
-                ws.onerror = () => {
+                ws.onerror = (e) => {
+                    console.error('WS Error:', e);
                     hideTyping();
+                    document.getElementById('statusText').textContent = 'http fallback';
                     // If WS not available, use fetch API
                     useFetchAPI(initialMessage);
                 };
-
-                ws.onclose = () => {
-                    connected = false;
-                    document.getElementById('statusText').textContent = 'offline';
-                    // Don't auto-reconnect - use HTTP fallback instead
-                };
             } catch (e) {
+                console.error('WS Connect error:', e);
                 hideTyping();
+                document.getElementById('statusText').textContent = 'http fallback';
                 useFetchAPI(initialMessage);
             }
         }
 
-        // Fallback: Use fetch API (always use absolute URL to VPS)
-        const API_BASE = 'https://vndal-chat-bridge.loca.lt.com';
+        // Fallback: Use fetch API
         function useFetchAPI(message) {
-            fetch(API_BASE + '/api/chat', {
+            showDebug('useFetchAPI: calling /api/chat with ' + message);
+            document.getElementById('statusText').textContent = 'http fallback';
+            fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message })
@@ -1245,6 +1718,7 @@
             .then(r => r.json())
             .then(d => {
                 hideTyping();
+                showDebug('HTTP fallback got: ' + JSON.stringify(d).substring(0, 100));
                 playNotificationSound();
                 addMessage(d.response || d.reply || 'Maaf, saya tidak bisa menjawab sekarang.', 'recv');
             })
@@ -1263,22 +1737,14 @@
             addMessage("Chat cleared. 👋\n\nAda yang bisa saya bantu lagi?", 'recv');
         }
 
-        // Debug: check what elements exist
-        try {
-            console.log('welcomeScreen:', document.getElementById('welcomeScreen'));
-            console.log('chatContainer:', document.getElementById('chatContainer'));
-            console.log('messageInput:', document.getElementById('messageInput'));
-        } catch(e) {
-            alert('JS Error: ' + e.message);
-        }
-
         // Scroll to bottom on load
         document.getElementById('chatContainer').scrollTop = 0;
 
         // Prevent right-click context menu (security)
         // document.addEventListener('contextmenu', e => e.preventDefault());
 
-
+        // Auto-start chat (skip welcome/lock screen)
+        initDashboard();
     </script>
 </body>
 </html>

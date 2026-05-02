@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lambda Full Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #111; color: #fff; padding: 10px; }
+        #header { background: #000; padding: 10px; display: flex; align-items: center; gap: 10px; }
+        #header img { width: 40px; height: 40px; border-radius: 50%; }
+        #status { color: #0f0; font-size: 14px; }
+        #log { background: #000; padding: 10px; height: 250px; overflow: auto; white-space: pre-wrap; font-family: monospace; font-size: 12px; margin-top: 10px; border: 1px solid #333; }
+        #log .sent { color: #0ff; }
+        #log .recv { color: #0f0; }
+        #log .sys { color: #ff0; }
+        #log .err { color: #f00; }
+        #log .ws { color: #f0f; }
+        #messages { background: #1a1a1a; padding: 10px; min-height: 200px; margin: 10px 0; }
+        .msg { padding: 8px 12px; margin: 5px 0; border-radius: 8px; max-width: 85%; }
+        .msg.sent { background: #0066cc; margin-left: 15%; text-align: right; }
+        .msg.recv { background: #333; margin-right: 15%; }
+        .typing { color: #888; font-style: italic; }
+        button { background: #0a0; color: #fff; padding: 15px 25px; font-size: 16px; border: none; cursor: pointer; margin: 3px; border-radius: 8px; }
+        button:hover { background: #0c0; }
+        input { background: #333; color: #fff; border: 1px solid #555; padding: 12px; font-size: 16px; width: 70%; border-radius: 8px; }
+        .choice-btn { background: #660 !important; }
+    </style>
+</head>
+<body>
+<div id="header">
+    <img src="saved_images/img_114971a3e80b.jpg" onerror="this.style.display='none'">
+    <div>
+        <div style="font-weight:bold">Lambda AI</div>
+        <div id="status">⚪ offline</div>
+    </div>
+    <button onclick="connectWS()" style="margin-left:auto">RECONNECT</button>
+</div>
+
+<div id="messages"></div>
+<div id="typing" class="typing" style="display:none">Lambda sedang mengetik...</div>
+
+<div style="display:flex;gap:5px;margin-top:10px">
+    <input type="text" id="msgInput" value="/start" placeholder="Ketik pesan...">
+    <button onclick="sendMsg()">SEND</button>
+</div>
+
+<div style="margin-top:15px">
+    <button onclick="testFlow()">TEST FULL FLOW</button>
+    <button onclick="clearLog()">CLEAR LOG</button>
+</div>
+
+<div id="log"></div>
+
+<script>
+let ws = null;
+let connected = false;
+const logEl = document.getElementById('log');
+const statusEl = document.getElementById('status');
+const msgsEl = document.getElementById('messages');
+const typingEl = document.getElementById('typing');
+
+function log(msg, type='') {
+    const div = document.createElement('div');
+    div.className = type;
+    div.textContent = new Date().toISOString().substr(11,8) + ' ' + type.toUpperCase() + ': ' + msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+function setStatus(s, color='#0f0') {
+    statusEl.textContent = s;
+    statusEl.style.color = color;
+}
+function showTyping() { typingEl.style.display = 'block'; }
+function hideTyping() { typingEl.style.display = 'none'; }
+function clearMsgs() { msgsEl.innerHTML = ''; }
+function clearLog() { logEl.innerHTML = ''; }
+
+function addMsg(text, type='recv') {
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.textContent = text;
+    msgsEl.appendChild(div);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function connectWS() {
+    if (ws) { ws.close(); ws = null; }
+    log('Connecting to ws://43.156.57.226/ws...', 'ws');
+    setStatus('⚡ connecting...', '#ff0');
+    
+    try {
+        ws = new WebSocket('ws://43.156.57.226/ws');
+    } catch(e) {
+        log('WebSocket creation failed: ' + e.message, 'err');
+        return;
+    }
+    
+    ws.onopen = () => {
+        log('WS OPEN!', 'ws');
+        connected = true;
+        setStatus('🟢 online');
+    };
+    
+    ws.onmessage = (e) => {
+        log('RAW: ' + e.data.substring(0, 200), 'ws');
+        try {
+            const d = JSON.parse(e.data);
+            log('Parsed: type=' + d.type + ', hasMessage=' + !!d.message + ', hasChoices=' + !!d.choices, 'ws');
+            
+            if (d.type === 'typing') {
+                if (d.status === 'start') {
+                    showTyping();
+                    log('Typing started', 'sys');
+                } else {
+                    hideTyping();
+                    log('Typing stopped', 'sys');
+                }
+            } else if (d.type === 'stream') {
+                hideTyping();
+                log('Stream chunk: ' + (d.chunk || '').substring(0, 50), 'recv');
+            } else if (d.type === 'response') {
+                hideTyping();
+                addMsg(d.message, 'recv');
+                log('Response shown: ' + d.message.substring(0, 80), 'sys');
+                if (d.choices) {
+                    log('Choices: ' + JSON.stringify(d.choices), 'sys');
+                    d.choices.forEach(c => {
+                        const btn = document.createElement('button');
+                        btn.className = 'choice-btn';
+                        btn.textContent = c.label;
+                        btn.onclick = () => {
+                            addMsg(c.value, 'sent');
+                            ws.send(JSON.stringify({type:'chat', message:c.value}));
+                            log('Sent choice: ' + c.value, 'sent');
+                        };
+                        msgsEl.appendChild(btn);
+                    });
+                }
+            } else if (d.type === 'error') {
+                hideTyping();
+                log('Error: ' + JSON.stringify(d), 'err');
+            }
+        } catch(e) {
+            log('Parse error: ' + e.message + ' | Data: ' + e.data, 'err');
+            addMsg(e.data, 'recv');
+        }
+    };
+    
+    ws.onerror = (e) => {
+        log('WS ERROR: ' + JSON.stringify(e), 'err');
+        setStatus('🔴 error', '#f00');
+    };
+    
+    ws.onclose = () => {
+        log('WS CLOSED', 'ws');
+        connected = false;
+        setStatus('⚪ offline', '#888');
+    };
+}
+
+function sendMsg() {
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text) return;
+    if (!ws || ws.readyState !== 1) {
+        log('WS not connected!', 'err');
+        addMsg(text, 'sent');
+        connectWS();
+        setTimeout(() => {
+            if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'chat',message:text}));
+        }, 1000);
+        return;
+    }
+    addMsg(text, 'sent');
+    log('Sending: ' + text, 'sent');
+    ws.send(JSON.stringify({type:'chat', message:text}));
+}
+
+function testFlow() {
+    clearLog();
+    clearMsgs();
+    log('=== TEST FLOW START ===', 'sys');
+    connectWS();
+    setTimeout(() => {
+        if (ws && ws.readyState === 1) {
+            log('Sending /start...', 'sys');
+            ws.send(JSON.stringify({type:'chat', message:'/start'}));
+        } else {
+            log('WS not ready after 1s!', 'err');
+        }
+    }, 1000);
+}
+
+// Auto-connect on load
+window.onload = () => {
+    log('Page loaded, connecting...', 'sys');
+    connectWS();
+    setTimeout(() => {
+        document.getElementById('msgInput').value = '/start';
+    }, 500);
+};
+
+// Enter key to send
+document.getElementById('msgInput').onkeydown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendMsg(); }
+};
+</script>
+</body>
+</html>

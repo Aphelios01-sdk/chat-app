@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WS Full Flow Test</title>
+<meta charset="UTF-8">
+<style>
+body { background: #111; color: #0f0; font-family: monospace; padding: 20px; font-size: 13px; }
+button { background: #0b5ed7; color: #fff; border: none; padding: 10px 16px; cursor: pointer; margin: 2px; border-radius: 6px; }
+button:disabled { background: #555; }
+input { background: #222; color: #0f0; border: 1px solid #444; padding: 8px; width: 60%; }
+#status { padding: 8px; background: #222; margin-bottom: 10px; border-radius: 4px; }
+#log { border: 1px solid #333; padding: 10px; height: 150px; overflow-y: auto; background: #000; margin-bottom: 10px; border-radius: 4px; }
+#chat { border: 1px solid #333; padding: 10px; height: 300px; overflow-y: auto; background: #000; margin-bottom: 10px; border-radius: 4px; }
+.msg { margin: 4px 0; padding: 4px; border-radius: 4px; }
+.msg.sent { background: #003a4a; color: #0ff; }
+.msg.recv { background: #1a3a1a; color: #0f0; }
+.msg.info { background: #333; color: #ff0; }
+.msg.err { background: #3a1a1a; color: #f00; }
+.choice-btn { background: #0b5ed7; color: #fff; border: none; padding: 8px 16px; cursor: pointer; border-radius: 20px; margin: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+<h3>🔌 Full WS Flow Test</h3>
+<div id="status">Disconnected</div>
+<button onclick="startChat()">1. Start Chat</button>
+<button onclick="testFlow()">2. Test Full Flow</button>
+<button onclick="clearAll()">Clear</button>
+<div id="chat"></div>
+<input type="text" id="msgInput" placeholder="Type message...">
+<button onclick="sendMsg()" id="sendBtn" disabled>Send</button>
+<div id="log"></div>
+
+<script>
+const statusEl = document.getElementById('status');
+const chatEl = document.getElementById('chat');
+const logEl = document.getElementById('log');
+let ws = null;
+let step = 0;
+
+function log(msg, type='info') {
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.textContent = new Date().toISOString().substr(11,8) + ' ' + msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log('LOG:', type, msg);
+}
+
+function setStatus(s) {
+    statusEl.textContent = s;
+}
+
+function clearAll() {
+    chatEl.innerHTML = '';
+    logEl.innerHTML = '';
+}
+
+// Mimic the app's addMessage
+function addMessage(text, type) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + type;
+    d.textContent = (type === 'sent' ? '>>> ' : '<<< ') + text;
+    chatEl.appendChild(d);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    log('addMessage(' + type + '): ' + text.substring(0, 80), 'info');
+}
+
+// Mimic the app's showChoices
+function showChoices(choices) {
+    const d = document.createElement('div');
+    d.style.margin = '8px 0';
+    choices.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = c.label;
+        btn.onclick = () => {
+            log('Clicked choice: ' + c.value, 'info');
+            addMessage(c.value, 'sent');
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: 'chat', message: c.value}));
+                setStatus('Waiting for response...');
+            }
+        };
+        d.appendChild(btn);
+    });
+    chatEl.appendChild(d);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    log('showChoices(): ' + choices.length + ' buttons rendered', 'info');
+}
+
+function startChat() {
+    clearAll();
+    log('Connecting to ws://43.156.57.226/ws ...', 'info');
+    setStatus('Connecting...');
+
+    ws = new WebSocket('ws://43.156.57.226/ws');
+
+    ws.onopen = () => {
+        log('WS CONNECTED', 'info');
+        setStatus('Connected! Sending /start...');
+        ws.send(JSON.stringify({type: 'chat', message: '/start'}));
+        log('Sent: /start', 'info');
+    };
+
+    ws.onmessage = (event) => {
+        log('WS MSG received, len=' + event.data.length, 'info');
+        try {
+            const data = JSON.parse(event.data);
+            log('  type=' + data.type + ' choices=' + (data.choices ? data.choices.length : 'none'), 'info');
+
+            if (data.type === 'typing') {
+                setStatus(data.status === 'start' ? 'AI is typing...' : 'AI finished');
+            } else if (data.type === 'stream') {
+                // Stream - just log
+            } else if (data.type === 'response') {
+                addMessage(data.message, 'recv');
+                if (data.choices && data.choices.length > 0) {
+                    showChoices(data.choices);
+                }
+                setStatus('Waiting for user input...');
+            } else if (data.type === 'error') {
+                addMessage('ERROR: ' + data.message, 'err');
+            }
+        } catch(e) {
+            log('Parse error: ' + e.message, 'err');
+            addMessage(event.data, 'recv');
+        }
+    };
+
+    ws.onerror = (e) => {
+        log('WS ERROR: ' + JSON.stringify(e), 'err');
+        setStatus('WS Error!');
+    };
+
+    ws.onclose = (e) => {
+        log('WS CLOSED: code=' + e.code, 'err');
+        setStatus('Disconnected');
+        document.getElementById('sendBtn').disabled = true;
+    };
+}
+
+function testFlow() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log('WS not connected! Click "Start Chat" first', 'err');
+        return;
+    }
+    const msg = document.getElementById('msgInput').value.trim() || 'Jam berapa sekarang?';
+    addMessage(msg, 'sent');
+    ws.send(JSON.stringify({type: 'chat', message: msg}));
+    setStatus('Waiting...');
+}
+
+function sendMsg() {
+    const msg = document.getElementById('msgInput').value.trim();
+    if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
+    addMessage(msg, 'sent');
+    ws.send(JSON.stringify({type: 'chat', message: msg}));
+    document.getElementById('msgInput').value = '';
+}
+
+document.getElementById('msgInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMsg();
+});
+</script>
+</body>
+</html>
