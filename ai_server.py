@@ -17,149 +17,89 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import html
 import urllib.parse
-import secrets
-import hashlib
-import time
 
 connected_clients = set()
 message_count = 0  # Track total messages sent to chat
 
 # ============================================================
-# USER AUTH SYSTEM - Email/Password login (stateless, no chat history)
+# SECURE PIN SYSTEM - Server-side verification
 # ============================================================
+import secrets
+import hashlib
+import time
 
-USERS_FILE = Path(__file__).parent / "users.json"
-SESSIONS = {}  # {token: {"user_id": ..., "email": ..., "created_at": ...}}
-SESSION_TTL = 86400 * 30  # 30 days (no auto-logout until logout)
+# PIN storage: sha256$pdkdf2_hash (stored format)
+# Default PIN '1234' with generated salt
+PIN_STORE = {
+    "salt": "edba8f33b08018d0df1606bcc46c32d6",
+    "hash": "64c871e98e1f2669d82fd1e170f19595a473b250e7d4cd8761aa04c7c66f868e"
+}
 
-def load_users():
-    if USERS_FILE.exists():
-        with open(USERS_FILE) as f:
-            return json.load(f)
-    return {}
+# Failed attempts tracking: {ip: {"count": N, "until": timestamp}}
+failed_attempts = {}
+MAX_ATTEMPTS = 5
+LOCKOUT_SECONDS = 300  # 5 minutes
 
-def save_users(users):
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f, indent=2)
+def verify_pin(pin: str) -> bool:
+    """Verify PIN using PBKDF2-SHA256 with stored salt"""
+    salt = PIN_STORE["salt"]
+    stored_hash = PIN_STORE["hash"]
+    computed = hashlib.pbkdf2_hmac('sha256', pin.encode(), salt.encode(), 100000).hex()
+    return secrets.compare_digest(computed, stored_hash)
 
-def hash_password(password, salt=None):
-    if salt is None:
-        salt = secrets.token_hex(16)
-    h = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
-    return salt + ":" + h.hex()
-
-def verify_password(password, stored):
-    try:
-        salt, _ = stored.split(":")
-        return hash_password(password, salt) == stored
-    except:
-        return False
-
-def generate_token():
-    return secrets.token_urlsafe(32)
-
-async def register_handler(request):
-    """POST /api/auth/register - create new account"""
+async def verify_pin_handler(request):
+    """POST /api/verify-pin - verify PIN and return success/lockout"""
     try:
         data = await request.json()
-        email = data.get("email", "").strip().lower()
-        password = data.get("password", "")
+        pin = data.get("pin", "")
     except:
         return web.json_response({"error": "Invalid request"}, status=400)
-
-    if not email or "@" not in email:
-        return web.json_response({"error": "Email tidak valid"}, status=400)
-    if len(password) < 4:
-        return web.json_response({"error": "Password minimal 4 karakter"}, status=400)
-
-    users = load_users()
-    if email in users:
-        return web.json_response({"error": "Email sudah terdaftar"}, status=409)
-
-    users[email] = {
-        "password": hash_password(password),
-        "created_at": datetime.utcnow().isoformat()
-    }
-    save_users(users)
-
-    # Auto-login after register
-    token = generate_token()
-    SESSIONS[token] = {
-        "user_id": email,
-        "email": email,
-        "created_at": time.time()
-    }
-    return web.json_response({"success": True, "token": token, "email": email})
-
-async def login_handler(request):
-    """POST /api/auth/login - authenticate and return session token"""
-    try:
-        data = await request.json()
-        email = data.get("email", "").strip().lower()
-        password = data.get("password", "")
-    except:
-        return web.json_response({"error": "Invalid request"}, status=400)
-
-    if not email or not password:
-        return web.json_response({"error": "Email dan password wajib diisi"}, status=400)
-
-    users = load_users()
-    if email not in users or not verify_password(password, users[email]["password"]):
-        return web.json_response({"error": "Email atau password salah"}, status=401)
-
-    token = generate_token()
-    SESSIONS[token] = {
-        "user_id": email,
-        "email": email,
-        "created_at": time.time()
-    }
-    return web.json_response({"success": True, "token": token, "email": email})
-
-async def logout_handler(request):
-    """POST /api/auth/logout - invalidate session token"""
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header[7:]
-        SESSIONS.pop(token, None)
-    return web.json_response({"success": True})
-
-async def me_handler(request):
-    """GET /api/auth/me - return current session user"""
-    auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer "):
-        return web.json_response({"error": "Unauthorized"}, status=401)
-    token = auth_header[7:]
-    session = SESSIONS.get(token)
-    if not session:
-        return web.json_response({"error": "Session expired"}, status=401)
-    return web.json_response({"email": session["email"]})
-
-def require_auth(handler):
-    """Decorator: validate Bearer token before handler"""
-    async def wrapper(request):
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
-            return web.json_response({"error": "Unauthorized"}, status=401)
-        token = auth_header[7:]
-        session = SESSIONS.get(token)
-        if not session:
-            return web.json_response({"error": "Session expired"}, status=401)
-        request.user = session
-        return await handler(request)
-    return wrapper
-
-# Cleanup expired sessions every hour
-async def cleanup_sessions():
-    while True:
-        await asyncio.sleep(3600)
-        now = time.time()
-        expired = [t for t, s in SESSIONS.items() if now - s["created_at"] > SESSION_TTL]
-        for t in expired:
-            SESSIONS.pop(t, None)
-
-# ============================================================
-# (PIN SYSTEM REMOVED - replaced by email/password auth)
-# ============================================================
+    
+    client_ip = request.remote
+    now = time.time()
+    
+    # Check lockout
+    if client_ip in failed_attempts:
+        info = failed_attempts[client_ip]
+        if now < info["until"]:
+            remaining = int(info["until"] - now)
+            return web.json_response({
+                "success": False,
+                "locked": True,
+                "remaining_seconds": remaining,
+                "attempts_left": 0
+            })
+        else:
+            # Lockout expired, reset
+            del failed_attempts[client_ip]
+    
+    # Verify PIN
+    if verify_pin(pin):
+        # Reset failed attempts on success
+        if client_ip in failed_attempts:
+            del failed_attempts[client_ip]
+        return web.json_response({"success": True, "locked": False})
+    else:
+        # Increment failed attempts
+        if client_ip not in failed_attempts:
+            failed_attempts[client_ip] = {"count": 0, "until": 0}
+        failed_attempts[client_ip]["count"] += 1
+        attempts_left = MAX_ATTEMPTS - failed_attempts[client_ip]["count"]
+        
+        if attempts_left <= 0:
+            failed_attempts[client_ip]["until"] = now + LOCKOUT_SECONDS
+            return web.json_response({
+                "success": False,
+                "locked": True,
+                "remaining_seconds": LOCKOUT_SECONDS,
+                "attempts_left": 0
+            })
+        
+        return web.json_response({
+            "success": False,
+            "locked": False,
+            "attempts_left": attempts_left
+        })
 
 # Get API key from environment
 def get_api_key():
@@ -1310,27 +1250,8 @@ async def call_minimax(messages, session_id=None):
 async def handler(websocket):
     """Handle client connection"""
     client_id = id(websocket)
-    
-    # Auth validation: expect first message to be auth token
-    try:
-        auth_msg = await asyncio.wait_for(websocket.rec(), timeout=10)
-        auth_data = json.loads(auth_msg)
-        token = auth_data.get("token", "")
-        session = SESSIONS.get(token)
-        if not session:
-            await websocket.send(json.dumps({"type": "error", "message": "Unauthorized"}))
-            await websocket.close()
-            return
-        user_email = session["email"]
-        print(f"[+] Client {client_id} ({user_email}) connected ({len(connected_clients)} online)")
-    except asyncio.TimeoutError:
-        await websocket.close()
-        return
-    except Exception:
-        await websocket.close()
-        return
-
     connected_clients.add(client_id)
+    print(f"[+] Client {client_id} connected ({len(connected_clients)} online)")
     
     # Separate memories for AI and User
     ai_memory = {
@@ -1341,7 +1262,6 @@ async def handler(websocket):
     
     user_memory = {
         "name": None,
-        "email": user_email,
         "language": None,
         "preferences": {}
     }
@@ -1947,7 +1867,7 @@ async def main():
                 headers={
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                    'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Max-Age': '86400',
                 }
             )
@@ -1955,21 +1875,14 @@ async def main():
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
 
-    # Start session cleanup background task
-    asyncio.create_task(cleanup_sessions())
-
     # HTTP server for /api/chat and /api/skills on port 5002
     http_app = web.Application(middlewares=[cors_middleware])
-    http_app.router.add_post("/api/auth/register", register_handler)
-    http_app.router.add_post("/api/auth/login", login_handler)
-    http_app.router.add_post("/api/auth/logout", logout_handler)
-    http_app.router.add_get("/api/auth/me", me_handler)
     http_app.router.add_post("/api/chat", http_handler)
     http_app.router.add_get("/api/skills", skills_handler)
     http_app.router.add_get("/api/messages/count", messages_count_handler)  # For Android service
     http_app.router.add_get("/api/inject", inject_status_handler)  # GET for background service status
     http_app.router.add_post("/api/inject", inject_handler)  # For Agent 1 to inject messages
-
+    http_app.router.add_post("/api/verify-pin", verify_pin_handler)  # Secure PIN verification
     http_runner = web.AppRunner(http_app)
     await http_runner.setup()
     http_site = web.TCPSite(http_runner, HOST, HTTP_PORT)

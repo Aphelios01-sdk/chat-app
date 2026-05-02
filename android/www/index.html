@@ -880,7 +880,7 @@
         }
 
         .lock-screen .submit-btn {
-            margin-top: 24px;
+            margin-top: 40px;
             background: transparent;
             color: #FFFFFF;
             border: 1px solid rgba(255,255,255,0.25);
@@ -895,69 +895,6 @@
             line-height: 1.8;
             text-align: center;
             transition: all 0.3s ease;
-        }
-
-        .logout-btn {
-            margin-top: 8px;
-            background: transparent;
-            color: rgba(255,255,255,0.4);
-            border: none;
-            font-size: 12px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        /* Auth Form */
-        .lock-screen form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 340px;
-        }
-
-        .lock-screen input[type="email"],
-        .lock-screen input[type="password"] {
-            width: 100%;
-            padding: 14px 18px;
-            margin-bottom: 12px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-        }
-
-        .lock-screen input[type="email"]:focus,
-        .lock-screen input[type="password"]:focus {
-            border-color: rgba(255,255,255,0.5);
-        }
-
-        .lock-screen input::placeholder {
-            color: rgba(255,255,255,0.4);
-        }
-
-        .lock-screen p {
-            color: rgba(255,255,255,0.5);
-            font-size: 13px;
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-            margin-top: 16px;
-            cursor: pointer;
-        }
-
-        .auth-error {
-            color: #ff6b6b !important;
-            font-size: 12px !important;
-            margin-top: 12px !important;
-            text-align: center;
-        }
-
-        .auth-error:empty {
-            display: none;
         }
 
         .lock-screen .submit-btn:hover {
@@ -1017,17 +954,31 @@
     </style>
 </head>
 <body>
-    <!-- Login / Register Screen -->
-    <div class="lock-screen" id="lockScreen">
+    <!-- PIN Lock Screen -->
+    <div class="lock-screen hidden" id="lockScreen">
         <div class="lock-icon">λ</div>
-        <h3 id="authTitle">Login</h3>
-        <form id="authForm" onsubmit="submitAuth(event)">
-            <input type="email" id="emailInput" placeholder="Email" required autocomplete="email">
-            <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
-            <button type="submit" class="submit-btn" id="authSubmit">LOGIN</button>
-        </form>
-        <p id="authToggle" onclick="toggleAuthMode()">Belum punya akun? <u>Register</u></p>
-        <p id="authError" class="auth-error"></p>
+        <h3><span id="quoteText"></span></h3>
+        <div class="pin-dots" id="pinDots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+        </div>
+        <div class="numpad">
+            <button class="numpad-btn" onclick="addPin('1')">1</button>
+            <button class="numpad-btn" onclick="addPin('2')">2</button>
+            <button class="numpad-btn" onclick="addPin('3')">3</button>
+            <button class="numpad-btn" onclick="addPin('4')">4</button>
+            <button class="numpad-btn" onclick="addPin('5')">5</button>
+            <button class="numpad-btn" onclick="addPin('6')">6</button>
+            <button class="numpad-btn" onclick="addPin('7')">7</button>
+            <button class="numpad-btn" onclick="addPin('8')">8</button>
+            <button class="numpad-btn" onclick="addPin('9')">9</button>
+            <button class="numpad-btn numpad-empty"></button>
+            <button class="numpad-btn" onclick="addPin('0')">0</button>
+            <button class="numpad-btn numpad-delete" onclick="deletePin()">⌫</button>
+        </div>
+        <button class="submit-btn" onclick="submitPin()">BUKA</button>
     </div>
 
     <!-- Header -->
@@ -1047,7 +998,6 @@
         <h2>Make Your Work Easier</h2>
         <p>L = Σ(y - y_pred)² + λ Σ(w²)</p>
         <button class="start-btn" onclick="startChat()">Mulai Chat</button>
-        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <!-- Chat Container -->
@@ -1091,117 +1041,86 @@
     <div class="skills-popup-overlay" id="skillsOverlay" onclick="closeSkillsPopup()"></div>
 
     <script>
-        // ===== AUTH SYSTEM - Email/Password login =====
-        let authToken = localStorage.getItem('auth_token') || '';
-        let authEmail = localStorage.getItem('auth_email') || '';
-        let isRegisterMode = false;
+        // ===== SECURE PIN SYSTEM - Server-side verification =====
+        let isLocked = false;
+        let failedAttempts = 0;
+        let lockoutUntil = null;
+        let pin = '';
 
-        function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            document.getElementById('authTitle').textContent = isRegisterMode ? 'Register' : 'Login';
-            document.getElementById('authSubmit').textContent = isRegisterMode ? 'REGISTER' : 'LOGIN';
-            document.getElementById('authToggle').innerHTML = isRegisterMode
-                ? 'Sudah punya akun? <u>Login</u>'
-                : 'Belum punya akun? <u>Register</u>';
-            document.getElementById('authError').textContent = '';
+        function addPin(digit) {
+            if (pin.length < 4) {
+                pin += digit;
+                updatePinDots();
+                if (pin.length === 4) {
+                    setTimeout(submitPin, 100);
+                }
+            }
         }
 
-        async function submitAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('emailInput').value.trim().toLowerCase();
-            const password = document.getElementById('passwordInput').value;
-            const errorEl = document.getElementById('authError');
-            errorEl.textContent = '';
+        function deletePin() {
+            if (pin.length > 0) {
+                pin = pin.slice(0, -1);
+                updatePinDots();
+            }
+        }
 
-            if (!email || !password) {
-                errorEl.textContent = 'Email dan password wajib diisi';
+        function updatePinDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, i) => {
+                if (i < pin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        async function submitPin() {
+            if (lockoutUntil && Date.now() < lockoutUntil) {
                 return;
             }
 
-            const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
-            const apiBase = getApiBase();
-
             try {
-                const resp = await fetch(apiBase + endpoint, {
+                const resp = await fetch('http://43.156.57.226/api/verify-pin', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email, password})
+                    body: JSON.stringify({pin: pin})
                 });
                 const data = await resp.json();
 
                 if (data.success) {
-                    authToken = data.token;
-                    authEmail = data.email;
-                    localStorage.setItem('auth_token', authToken);
-                    localStorage.setItem('auth_email', authEmail);
-                    unlockApp();
+                    isLocked = false;
+                    const lockScreen = document.getElementById('lockScreen');
+                    lockScreen.classList.add('hiding');
+                    setTimeout(() => {
+                        lockScreen.classList.add('hidden');
+                        lockScreen.classList.remove('hiding');
+                        document.querySelector('.header').classList.add('dashboard-enter');
+                        document.querySelector('.welcome-screen').classList.add('dashboard-enter');
+                        document.querySelector('.chat-container').classList.add('dashboard-enter');
+                        document.querySelector('.input-area').classList.add('dashboard-enter');
+                    }, 800);
                 } else {
-                    errorEl.textContent = data.error || 'Auth gagal';
+                    failedAttempts++;
+                    const dots = document.querySelectorAll('.pin-dot');
+                    dots.forEach(dot => {
+                        dot.style.animation = 'none';
+                        dot.offsetHeight;
+                        dot.style.animation = 'shake 0.5s ease';
+                    });
+                    pin = '';
+                    updatePinDots();
+
+                    if (data.locked) {
+                        lockoutUntil = Date.now() + data.remaining_seconds * 1000;
+                        alert('Terlalu banyak percobaan salah. Kunci selama ' + Math.ceil(data.remaining_seconds/60) + ' menit.');
+                    } else if (data.attempts_left !== undefined) {
+                        alert('PIN salah. Sisa percobaan: ' + data.attempts_left);
+                    }
                 }
             } catch(e) {
-                errorEl.textContent = 'Koneksi gagal: ' + e.message;
+                alert('Verifikasi gagal: ' + e.message);
             }
-        }
-
-        async function checkSession() {
-            if (!authToken) return false;
-            const apiBase = getApiBase();
-            try {
-                const resp = await fetch(apiBase + '/api/auth/me', {
-                    headers: {'Authorization': 'Bearer ' + authToken}
-                });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    authEmail = data.email || authEmail;
-                    return true;
-                }
-            } catch(e) {}
-            authToken = '';
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_email');
-            return false;
-        }
-
-        function unlockApp() {
-            const lockScreen = document.getElementById('lockScreen');
-            lockScreen.classList.add('hiding');
-            setTimeout(() => {
-                lockScreen.classList.add('hidden');
-                lockScreen.classList.remove('hiding');
-                document.querySelector('.header').classList.add('dashboard-enter');
-                document.querySelector('.welcome-screen').classList.add('dashboard-enter');
-                document.querySelector('.chat-container').classList.add('dashboard-enter');
-                document.querySelector('.input-area').classList.add('dashboard-enter');
-            }, 800);
-            initWebSocket();
-        }
-
-        // Auto-check session on load
-        (async function initAuth() {
-            if (await checkSession()) {
-                unlockApp();
-            }
-        })();
-
-        function logout() {
-            if (authToken) {
-                const apiBase = getApiBase();
-                fetch(apiBase + '/api/auth/logout', {
-                    method: 'POST',
-                    headers: {'Authorization': 'Bearer ' + authToken}
-                }).catch(() => {});
-            }
-            authToken = '';
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_email');
-            location.reload();
-        }
-
-        function getApiBase() {
-            if (window.location.protocol === 'https:') {
-                return 'https://vndal-api-bridge.loca.lt';
-            }
-            return 'http://43.156.57.226';
         }
 
         // ===== AUDIO SYSTEM - Notification Sound =====
@@ -1692,7 +1611,7 @@
             // Use wss:// if served from HTTPS, else ws:// for HTTP
             const isHTTPS = window.location.protocol === 'https:';
             const wsUrl = isHTTPS
-                ? `wss://vndal-api-bridge.loca.lt/ws`
+                ? `wss://lambdachatvps.loca.lt/ws`
                 : `ws://43.156.57.226/ws`;
             showDebug('WS: connecting to ' + wsUrl);
 
@@ -1716,8 +1635,6 @@
                     clearTimeout(wsTimeout);
                     connected = true;
                     document.getElementById('statusText').textContent = 'online';
-                    // Send auth token first
-                    ws.send(JSON.stringify({token: authToken}));
                     if (initialMessage) {
                         console.log('SENDING INITIAL MSG:', initialMessage);
                         ws.send(JSON.stringify({
