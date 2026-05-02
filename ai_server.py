@@ -1642,24 +1642,16 @@ INSTRUKSI TOOL:
                     # Check for tool calls in AI response
                     tool_calls = parse_tool_call(response_text)
                     
-                    # If tool calls detected, process them
+                    # If tool calls detected, execute tools and get final AI response
                     if tool_calls:
                         print(f"[Tools] Detected {len(tool_calls)} tool call(s)")
-                        # Remove tool call syntax from displayed response
-                        clean_response = TOOL_PATTERN.sub('', response_text).strip()
-                        
-                        # Send initial response (without tool syntax)
-                        await websocket.send(json.dumps({
-                            "type": "response",
-                            "message": clean_response
-                        }))
-                        
-                        # Execute each tool and send results
+                        tool_results = []
                         for tool_match, tool_name, params in tool_calls:
                             if tool_name in TOOLS:
                                 print(f"[Tools] Executing: {tool_name} with params: {params}")
                                 result = await exec_tool(tool_name, params)
                                 print(f"[Tools] Result: {result[:100]}")
+                                tool_results.append(f"[{tool_name}] {result}")
                                 # Send tool result to client
                                 await websocket.send(json.dumps({
                                     "type": "tool_result",
@@ -1668,6 +1660,19 @@ INSTRUKSI TOOL:
                                 }))
                             else:
                                 print(f"[Tools] Unknown tool: {tool_name}")
+                        
+                        # Re-call AI with tool results
+                        if tool_results:
+                            tool_context = "\n\n".join(tool_results)
+                            follow_up = f"User said: {user_msg}\n\nTool results:\n{tool_context}\n\nBased on the tool results above, answer the user's question directly and concisely."
+                            full_messages = [{"role": "system", "content": system_prompt}] + session_messages + [{"role": "user", "content": follow_up}]
+                            response_text, _ = await call_minimax(full_messages)
+                            print(f"[AI Final]: {response_text[:100]}")
+                            session_messages.append({"role": "assistant", "content": response_text})
+                            await websocket.send(json.dumps({
+                                "type": "response",
+                                "message": response_text
+                            }))
                     else:
                         # Add AI response to history
                         session_messages.append({"role": "assistant", "content": response_text})
