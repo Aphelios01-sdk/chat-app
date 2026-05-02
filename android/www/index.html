@@ -1199,7 +1199,7 @@
 
         function getApiBase() {
             if (window.location.protocol === 'https:') {
-                return 'https://lambdachatvps.loca.lt';
+                return 'https://vndal-api-bridge.loca.lt';
             }
             return 'http://43.156.57.226';
         }
@@ -1692,7 +1692,7 @@
             // Use wss:// if served from HTTPS, else ws:// for HTTP
             const isHTTPS = window.location.protocol === 'https:';
             const wsUrl = isHTTPS
-                ? `wss://lambdachatvps.loca.lt/ws`
+                ? `wss://vndal-api-bridge.loca.lt/ws`
                 : `ws://43.156.57.226/ws`;
             showDebug('WS: connecting to ' + wsUrl);
 
