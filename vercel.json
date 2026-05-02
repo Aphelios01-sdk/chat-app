@@ -2,14 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "android/www/index.html",
+      "src": "android/www/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/saved_images/(.*)",
+      "dest": "/android/www/saved_images/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "android/www/index.html"
+      "dest": "/android/www/$1"
     }
   ]
 }
