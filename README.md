@@ -7,3 +7,5 @@ With advanced language processing capabilities, Lambda App is ready to help answ
 **Try:** https://lambda-chat.vercel.app/
 
 *APK coming soon.*
+
+![Lambda App Preview](screenshots/lambda-app-preview.jpg)
