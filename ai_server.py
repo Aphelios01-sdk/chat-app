@@ -57,11 +57,21 @@ import hashlib
 import time
 
 # PIN storage: sha256$pdkdf2_hash (stored format)
-# Default PIN '1234' with generated salt
-PIN_STORE = {
-    "salt": "edba8f33b08018d0df1606bcc46c32d6",
-    "hash": "64c871e98e1f2669d82fd1e170f19595a473b250e7d4cd8761aa04c7c66f868e"
-}
+# PIN and salt loaded from environment — MUST be set before running
+def _get_pin_config():
+    default_pin = os.environ.get("LAMBDA_PIN", "")
+    default_salt = os.environ.get("LAMBDA_PIN_SALT", "")
+    if default_pin and default_salt:
+        # Generate hash at startup from env vars
+        salt_b = default_salt.encode()
+        pin_hash = hashlib.pbkdf2_hmac('sha256', default_pin.encode(), salt_b, 100000).hex()
+        return {"salt": default_salt, "hash": pin_hash}
+    return None
+
+PIN_STORE = _get_pin_config()
+if PIN_STORE is None:
+    # No PIN configured — server will refuse to start for security
+    raise RuntimeError("LAMBDA_PIN and LAMBDA_PIN_SALT environment variables must be set!")
 
 # Failed attempts tracking: {ip: {"count": N, "until": timestamp}}
 failed_attempts = {}
