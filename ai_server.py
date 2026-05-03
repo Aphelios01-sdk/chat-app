@@ -992,10 +992,10 @@ def execute_terminal(command, timeout=30):
     """Execute a safe shell command. Blocked: os, sys, subprocess, pty, socket, etc."""
     import shlex
     forbidden = ['__import__', 'eval', 'exec', 'open', 'file', 'compile', 'reload',
-                 'exit', 'quit', 'breakpoint', 'os.', 'sys.', 'subprocess', 'pty',
-                 'socket', 'requests', 'urllib', 'http', 'wget',
-                 'chmod 7', 'chown', 'sudo', 'su ', 'passwd',
-                 'rm -rf', 'dd if=', 'mkfs', 'fdisk', 'parted']
+                'exit', 'quit', 'breakpoint', 'os.', 'sys.', 'subprocess', 'pty',
+                'socket', 'requests', 'urllib', 'http', 'wget',
+                'chmod 7', 'chown', 'sudo', 'su ',
+                'rm -rf', 'dd if=', 'mkfs', 'fdisk', 'parted']
     cmd_lower = command.lower()
     for fw in forbidden:
         if fw in cmd_lower:
@@ -1007,7 +1007,7 @@ def execute_terminal(command, timeout=30):
         if not args:
             return "Error: Empty command"
         
-        # Whitelist allowed commands
+        # Whitelist allowed commands (REMOVED: ssh, rsync, scp — can be used for lateral movement)
         allowed = {'ls', 'pwd', 'whoami', 'date', 'cat', 'echo', 'head', 'tail',
                    'grep', 'awk', 'sed', 'sort', 'uniq', 'wc', 'find', 'mkdir',
                    'cp', 'mv', 'touch', 'tree', 'df', 'free', 'uptime', 'ps',
@@ -1017,15 +1017,27 @@ def execute_terminal(command, timeout=30):
                    'arch', 'type', 'which', 'env', 'printenv', 'seq', 'yes',
                    'base64', 'md5sum', 'sha256sum', 'sha1sum', 'xxd', 'hexdump',
                    'gh', 'kubectl', 'docker', 'helm', 'terraform', 'ansible-playbook',
-                   'ssh', 'rsync', 'scp', 'cd', 'cdir', 'pushd', 'popd', 'exit', 'cd ~'}
+                   'cd', 'cdir', 'pushd', 'popd', 'exit', 'cd ~'}
+        # Dangerous patterns to block — but NOT when they appear as benign args (e.g. "cat /etc/passwd")
+        # Only block standalone "passwd" command (changes user passwords)
+        cmd_lower = command.lower()
+        # Block if passwd is the command itself, not if it appears as a path argument
+        if args[0] == 'passwd' or 'passwd' in cmd_lower and command.lower().strip().startswith('passwd'):
+            return f"Error: Command 'passwd' not allowed"
         
+        # Command name must be in whitelist
         cmd_name = args[0]
         if cmd_name not in allowed:
             return f"Error: Command '{cmd_name}' not allowed. Allowed: {', '.join(sorted(allowed))[:200]}..."
         
+        sudo_patterns = ['sudo ', 'sudo -', 'su ', 'su -', 'chmod 7', 'chown ']
+        for pat in sudo_patterns:
+            if pat in cmd_lower:
+                return f"Error: Forbidden pattern '{pat}' in command"
+        
         result = subprocess.run(
-            command,
-            shell=True,
+            args,  # shell=False with args list — no command chaining
+            shell=False,
             capture_output=True,
             text=True,
             timeout=timeout
@@ -1185,7 +1197,7 @@ print("║     AI CHAT SERVER - MiniMax Real AI        ║")
 print("╚══════════════════════════════════════════════╝")
 print(f"Model: {MINIMAX_MODEL}")
 print(f"API: {MINIMAX_BASE_URL}/anthropic/v1/messages")
-print(f"Key: {'*' * 20}{MINIMAX_API_KEY[-10:] if MINIMAX_API_KEY else 'NOT FOUND'}")
+print(f"Key: {'*' * 24}")
 print()
 
 async def call_minimax_stream(messages):
