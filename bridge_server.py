@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MiniMax AI Bridge Server
-Web chat frontend connects here -> forwards to MiniMax API
+AI AI Bridge Server
+Web chat frontend connects here -> forwards to AI API
 Same model as Telegram chat!
 """
 
@@ -22,26 +22,26 @@ except ImportError:
     print("Flask not available, using aiohttp only")
 
 # Configuration - get from environment
-MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY", "")
-MINIMAX_BASE_URL = os.environ.get("MINIMAX_BASE_URL", "https://api.minimax.io")
-MINIMAX_MODEL = os.environ.get("MINIMAX_MODEL", "MiniMax-M2.7")
+AI_API_KEY = os.environ.get("AI_API_KEY", "")
+AI_BASE_URL = os.environ.get("AI_BASE_URL", "https://api.ai.io")
+AI_MODEL = os.environ.get("AI_MODEL", "AI-Model")
 BRIDGE_PORT = int(os.environ.get("BRIDGE_PORT", "5002"))
 
 # If no API key in env, try to get from hermes config
-if not MINIMAX_API_KEY:
+if not AI_API_KEY:
     from pathlib import Path
     env_file = Path.home() / ".hermes" / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
-            if line.startswith("MINIMAX_API_KEY="):
-                MINIMAX_API_KEY = line.split("=", 1)[1].strip().strip('"')
+            if line.startswith("AI_API_KEY="):
+                AI_API_KEY = line.split("=", 1)[1].strip().strip('"')
                 break
 
 print(f"╔══════════════════════════════════════════════╗")
-print(f"║     MiniMax AI Bridge Server                ║")
+print(f"║     AI AI Bridge Server                ║")
 print(f"╚══════════════════════════════════════════════╝")
-print(f"Model: {MINIMAX_MODEL}")
-print(f"API Key: {'*' * 20}{MINIMAX_API_KEY[-10:] if MINIMAX_API_KEY else 'NOT FOUND'}")
+print(f"Model: {AI_MODEL}")
+print(f"API Key: {'*' * 20}{AI_API_KEY[-10:] if AI_API_KEY else 'NOT FOUND'}")
 print(f"Port: {BRIDGE_PORT}")
 
 # Flask app
@@ -54,12 +54,12 @@ if FLASK_AVAILABLE:
         return jsonify({
             "object": "list",
             "data": [{
-                "id": MINIMAX_MODEL,
+                "id": AI_MODEL,
                 "object": "model",
                 "created": 1699999999,
-                "owned_by": "minimax",
+                "owned_by": "ai",
                 "permission": [],
-                "root": MINIMAX_MODEL,
+                "root": AI_MODEL,
                 "parent": None
             }]
         })
@@ -73,27 +73,27 @@ if FLASK_AVAILABLE:
                 return jsonify({"error": "No data provided"}), 400
 
             messages = data.get("messages", [])
-            model = data.get("model", MINIMAX_MODEL)
+            model = data.get("model", AI_MODEL)
             max_tokens = data.get("max_tokens", 4096)
             temperature = data.get("temperature", 0.7)
             stream = data.get("stream", False)
 
-            # Build MiniMax API request
+            # Build AI API request
             headers = {
-                "Authorization": f"Bearer {MINIMAX_API_KEY}",
+                "Authorization": f"Bearer {AI_API_KEY}",
                 "Content-Type": "application/json",
                 "anthropic-version": "2023-06-01"
             }
 
-            # Convert messages format for MiniMax
-            minimax_messages = []
+            # Convert messages format for AI
+            ai_messages = []
             for msg in messages:
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 
                 # Map roles
                 if role == "system":
-                    role = "user"  # MiniMax doesn't have system role in same way
+                    role = "user"  # AI doesn't have system role in same way
                     content = f"[System] {content}"
                 elif role == "assistant":
                     role = "assistant"
@@ -101,14 +101,14 @@ if FLASK_AVAILABLE:
                     role = "user"
                     content = f"[Tool Result] {content}"
                 
-                minimax_messages.append({
+                ai_messages.append({
                     "role": role,
                     "content": content
                 })
 
             payload = {
                 "model": model,
-                "messages": minimax_messages,
+                "messages": ai_messages,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
                 "stream": False
@@ -122,16 +122,16 @@ if FLASK_AVAILABLE:
                 
                 return Response(generate(), mimetype="text/event-stream")
 
-            # Make synchronous request to MiniMax
+            # Make synchronous request to AI
             import requests
-            api_path = "/anthropic/v1/messages" if "MiniMax" in model else "/v1/chat/completions"
+            api_path = "/anthropic/v1/messages" if "AI" in model else "/v1/chat/completions"
             
-            if "MiniMax" in model:
+            if "AI" in model:
                 # Use Anthropic-compatible endpoint
-                url = f"{MINIMAX_BASE_URL}/anthropic/v1/messages"
+                url = f"{AI_BASE_URL}/anthropic/v1/messages"
                 response = requests.post(url, headers=headers, json=payload, timeout=60)
             else:
-                url = f"{MINIMAX_BASE_URL}/v1/chat/completions"
+                url = f"{AI_BASE_URL}/v1/chat/completions"
                 response = requests.post(url, headers=headers, json=payload, timeout=60)
 
             if response.status_code != 200:
@@ -189,11 +189,11 @@ if FLASK_AVAILABLE:
 
     @app.route("/health", methods=["GET"])
     def health():
-        return jsonify({"status": "ok", "model": MINIMAX_MODEL})
+        return jsonify({"status": "ok", "model": AI_MODEL})
 
     if __name__ == "__main__":
-        if not MINIMAX_API_KEY:
-            print("WARNING: No MINIMAX_API_KEY found!")
+        if not AI_API_KEY:
+            print("WARNING: No AI_API_KEY found!")
             print("Set it via environment variable or edit the .env file")
         
         app.run(host="0.0.0.0", port=BRIDGE_PORT, debug=False, threaded=True)
@@ -204,19 +204,19 @@ else:
     async def handle_chat_completions(data, session):
         """Handle chat completions request"""
         messages = data.get("messages", [])
-        model = data.get("model", MINIMAX_MODEL)
+        model = data.get("model", AI_MODEL)
         max_tokens = data.get("max_tokens", 4096)
         temperature = data.get("temperature", 0.7)
         
-        # Build MiniMax API request
+        # Build AI API request
         headers = {
-            "Authorization": f"Bearer {MINIMAX_API_KEY}",
+            "Authorization": f"Bearer {AI_API_KEY}",
             "Content-Type": "application/json",
             "anthropic-version": "2023-06-01"
         }
         
         # Convert messages
-        minimax_messages = []
+        ai_messages = []
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", "")
@@ -229,16 +229,16 @@ else:
             elif role == "tool":
                 role = "user"
                 
-            minimax_messages.append({"role": role, "content": content})
+            ai_messages.append({"role": role, "content": content})
         
         payload = {
             "model": model,
-            "messages": minimax_messages,
+            "messages": ai_messages,
             "max_tokens": max_tokens,
             "temperature": temperature
         }
         
-        url = f"{MINIMAX_BASE_URL}/anthropic/v1/messages"
+        url = f"{AI_BASE_URL}/anthropic/v1/messages"
         
         async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=60)) as resp:
             result = await resp.json()
@@ -275,7 +275,7 @@ else:
     async def handler(request):
         """aiohttp handler"""
         if request.path == "/health":
-            return aiohttp.web.json_response({"status": "ok", "model": MINIMAX_MODEL})
+            return aiohttp.web.json_response({"status": "ok", "model": AI_MODEL})
         
         if request.path == "/v1/chat/completions" and request.method == "POST":
             try:
@@ -291,10 +291,10 @@ else:
             return aiohttp.web.json_response({
                 "object": "list",
                 "data": [{
-                    "id": MINIMAX_MODEL,
+                    "id": AI_MODEL,
                     "object": "model",
                     "created": 1699999999,
-                    "owned_by": "minimax"
+                    "owned_by": "ai"
                 }]
             })
         
@@ -307,8 +307,8 @@ else:
         return app
 
     def run_server():
-        if not MINIMAX_API_KEY:
-            print("WARNING: No MINIMAX_API_KEY found!")
+        if not AI_API_KEY:
+            print("WARNING: No AI_API_KEY found!")
         
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

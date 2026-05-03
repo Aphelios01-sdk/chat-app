@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AI Chat Server - MiniMax Real AI Version
-Web chat connects here -> calls MiniMax API
+AI Chat Server - AI Real AI Version
+Web chat connects here -> calls AI API
 Tools system integrated for extended capabilities!
 """
 
@@ -119,20 +119,20 @@ async def verify_pin_handler(request):
 
 # Get API key from environment
 def get_api_key():
-    api_key = os.environ.get("MINIMAX_API_KEY", "")
+    api_key = os.environ.get("AI_API_KEY", "")
     env_file = Path.home() / ".hermes" / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
-            if "MINIMAX_API_KEY" in line and not line.strip().startswith("#"):
+            if "AI_API_KEY" in line and not line.strip().startswith("#"):
                 parts = line.split("=", 1)
                 if len(parts) == 2 and parts[1].strip():
                     api_key = parts[1].strip().strip('"').strip("'")
                     break
     return api_key
 
-MINIMAX_API_KEY = get_api_key()
-MINIMAX_MODEL = "MiniMax-M2.7"
-MINIMAX_BASE_URL = "https://api.minimax.io"
+AI_API_KEY = get_api_key()
+AI_MODEL = "AI-Model"
+AI_BASE_URL = "https://api.ai.io"
 
 def get_wib_time():
     """Get current time in WIB (UTC+7)"""
@@ -1181,23 +1181,23 @@ def parse_tool_call(text):
     return matches
 
 print("╔══════════════════════════════════════════════╗")
-print("║     AI CHAT SERVER - MiniMax Real AI        ║")
+print("║     AI CHAT SERVER - AI Real AI        ║")
 print("╚══════════════════════════════════════════════╝")
-print(f"Model: {MINIMAX_MODEL}")
-print(f"API: {MINIMAX_BASE_URL}/anthropic/v1/messages")
+print(f"Model: {AI_MODEL}")
+print(f"API: {AI_BASE_URL}/anthropic/v1/messages")
 print(f"Key: {'*' * 24}")
 print()
 
-async def call_minimax_stream(messages):
-    """Call MiniMax API with streaming and yield chunks"""
+async def call_ai_stream(messages):
+    """Call AI API with streaming and yield chunks"""
     headers = {
-        "Authorization": f"Bearer {MINIMAX_API_KEY}",
+        "Authorization": f"Bearer {AI_API_KEY}",
         "Content-Type": "application/json",
         "anthropic-version": "2023-06-01"
     }
     
     payload = {
-        "model": MINIMAX_MODEL,
+        "model": AI_MODEL,
         "messages": messages,
         "max_tokens": 4096,
         "temperature": 0.7,
@@ -1206,7 +1206,7 @@ async def call_minimax_stream(messages):
     
     try:
         response = requests.post(
-            f"{MINIMAX_BASE_URL}/anthropic/v1/messages",
+            f"{AI_BASE_URL}/anthropic/v1/messages",
             headers=headers,
             json=payload,
             timeout=60,
@@ -1237,16 +1237,16 @@ async def call_minimax_stream(messages):
     except Exception as e:
         yield f"Connection error: {str(e)}"
 
-async def call_minimax(messages, session_id=None):
-    """Call MiniMax API and return full response text (non-streaming fallback)"""
+async def call_ai(messages, session_id=None):
+    """Call AI API and return full response text (non-streaming fallback)"""
     headers = {
-        "Authorization": f"Bearer {MINIMAX_API_KEY}",
+        "Authorization": f"Bearer {AI_API_KEY}",
         "Content-Type": "application/json",
         "anthropic-version": "2023-06-01"
     }
     
     payload = {
-        "model": MINIMAX_MODEL,
+        "model": AI_MODEL,
         "messages": messages,
         "max_tokens": 4096,
         "temperature": 0.7
@@ -1254,7 +1254,7 @@ async def call_minimax(messages, session_id=None):
     
     try:
         response = requests.post(
-            f"{MINIMAX_BASE_URL}/anthropic/v1/messages",
+            f"{AI_BASE_URL}/anthropic/v1/messages",
             headers=headers,
             json=payload,
             timeout=60
@@ -1430,9 +1430,9 @@ async def handler(websocket):
                     ai_context = f"AI Memory: name={ai_memory['name']}, language={ai_memory['language']}"
                     user_context = f"User Memory: language={user_memory['language']}, preferences={user_memory['preferences']}"
 
-                    # Call MiniMax with system prompt for plain text responses (no markdown)
+                    # Call AI with system prompt for plain text responses (no markdown)
                     current_time = get_wib_time().strftime("%d %B %Y, %H:%M:%S")
-                    system_prompt = f"""Anda adalah MiniMax AI. Respon Anda harus:
+                    system_prompt = f"""Anda adalah AI. Respon Anda harus:
 - Bahasa Indonesia informal (pakai "lu", "gua" tidak perlu formal)
 - Pendek dan langsung, jangan bertele-tele
 - JANGAN tampilkan alur berpikir / reasoning / thought process sama sekali
@@ -1443,7 +1443,7 @@ async def handler(websocket):
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
 - JANGAN PERNAH output reasoning/thinking/analysis text apapun. Langsung jawab.
 
-Model: {MINIMAX_MODEL}
+Model: {AI_MODEL}
 
 TOOLS (langsung bisa dipanggil dengan [TOOL: nama | param='nilai']):
 - calculator: kalkulasi matematika
@@ -1635,7 +1635,7 @@ INSTRUKSI TOOL:
 - Setelah tool dipanggil, response akan di-return. Sampaikan ke user dengan natural.
 - JANGAN gunakan tool untuk pertanyaan umum yang bisa dijawab tanpa data."""
                     full_messages = [{"role": "system", "content": system_prompt}] + session_messages
-                    response_text, usage = await call_minimax(full_messages)
+                    response_text, usage = await call_ai(full_messages)
                     
                     print(f"[AI]: {response_text[:100]}")
 
@@ -1666,7 +1666,7 @@ INSTRUKSI TOOL:
                             tool_context = "\n\n".join(tool_results)
                             follow_up = f"User said: {user_msg}\n\nTool results:\n{tool_context}\n\nBased on the tool results above, answer the user's question directly and concisely."
                             full_messages = [{"role": "system", "content": system_prompt}] + session_messages + [{"role": "user", "content": follow_up}]
-                            response_text, _ = await call_minimax(full_messages)
+                            response_text, _ = await call_ai(full_messages)
                             print(f"[AI Final]: {response_text[:100]}")
                             session_messages.append({"role": "assistant", "content": response_text})
                             await websocket.send(json.dumps({
@@ -1685,7 +1685,7 @@ INSTRUKSI TOOL:
             except json.JSONDecodeError:
                 # Plain text message
                 print(f"[User {client_id} plain]: {message[:100]}")
-                response_text, _ = await call_minimax([
+                response_text, _ = await call_ai([
                     {"role": "user", "content": message}
                 ])
                 await websocket.send(json.dumps({
@@ -1713,7 +1713,7 @@ async def http_handler(request):
         message = data.get("message", "")
         
         current_time = get_wib_time().strftime("%d %B %Y, %H:%M:%S")
-        system_prompt = f"""Anda adalah MiniMax AI. Respon Anda harus:
+        system_prompt = f"""Anda adalah AI. Respon Anda harus:
 - Bahasa Indonesia informal (pakai "lu", "gua" tidak perlu formal)
 - Pendek dan langsung, jangan bertele-tele
 - JANGAN tampilkan alur berpikir / reasoning / thought process sama sekali
@@ -1724,7 +1724,7 @@ async def http_handler(request):
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
 - JANGAN PERNAH output reasoning/thinking/analysis text apapun. Langsung jawab.
 
-Model: {MINIMAX_MODEL}
+Model: {AI_MODEL}
 
 TOOLS (langsung bisa dipanggil dengan [TOOL: nama | param='nilai']):
 - calculator: kalkulasi matematika
@@ -1757,7 +1757,7 @@ TOOLS (langsung bisa dipanggil dengan [TOOL: nama | param='nilai']):
 - JANGAN gunakan tool untuk pertanyaan umum yang bisa dijawab tanpa data."""
         
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
-        response_text, _ = await call_minimax(messages)
+        response_text, _ = await call_ai(messages)
         
         # Check for tool calls and execute
         tool_calls = parse_tool_call(response_text)
@@ -1911,8 +1911,8 @@ async def main():
     WS_PORT = 5001
     HTTP_PORT = 5002
 
-    if not MINIMAX_API_KEY:
-        print("WARNING: No MINIMAX_API_KEY found!")
+    if not AI_API_KEY:
+        print("WARNING: No AI_API_KEY found!")
 
     # CORS middleware for aiohttp
     @web.middleware
