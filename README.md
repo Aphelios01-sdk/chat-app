@@ -23,3 +23,5 @@ Some tests run well according to the selected language.
 The Lambda App was created with the aim of presenting AI that is not only smart, but also reliable as a daily digital partner.
 
 Really hoping for some tests to improvise to make it better, contact me: @tritonker
+
+> **Note:** If you can't chat, the chat is limited to 10 per day to overcome surging costs.
