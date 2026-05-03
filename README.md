@@ -21,3 +21,5 @@ Some tests run well according to the selected language.
 ## Why Lambda App?
 
 The Lambda App was created with the aim of presenting AI that is not only smart, but also reliable as a daily digital partner.
+
+Really hoping for some tests to improvise to make it better, contact me: @tritonker
