@@ -12,4 +12,6 @@ With advanced language processing capabilities, Lambda App is ready to help answ
 
 There are 2 language options: **Indonesian** and **English**.
 
+Some tests run well according to the selected language.
+
 ![Lambda App Preview 2](screenshots/lambda-app-preview-2.jpg)
