@@ -8,7 +8,6 @@ With advanced language processing capabilities, Lambda App is ready to help answ
 
 *APK coming soon.*
 
-There are 2 language options: **Indonesian** and **English**.
-
 ![Lambda App Preview](screenshots/lambda-app-preview.jpg)
+There are 2 language options: **Indonesian** and **English**.
 ![Lambda App Preview 2](screenshots/lambda-app-preview-2.jpg)
