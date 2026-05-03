@@ -15,3 +15,6 @@ There are 2 language options: **Indonesian** and **English**.
 ![Lambda App Preview 2](screenshots/lambda-app-preview-2.jpg)
 
 Some tests run well according to the selected language.
+
+![Lambda App Preview 3](screenshots/lambda-app-preview-3.jpg)
+![Lambda App Preview 4](screenshots/lambda-app-preview-4.jpg)
