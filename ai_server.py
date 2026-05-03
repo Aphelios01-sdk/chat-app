@@ -22,12 +22,12 @@ connected_clients = set()
 message_count = 0  # Track total messages sent to chat
 
 # ============================================================
-# IP CHAT LIMIT - 10 chats per IP per day (in-memory only)
+# IP CHAT LIMIT - 100 chats per IP per day (in-memory only)
 # ============================================================
 import datetime as dt
 
 CHAT_LIMITS = {}  # {ip: {"count": N, "date": "YYYY-MM-DD"}}
-MAX_CHATS_PER_DAY = 10
+MAX_CHATS_PER_DAY = 100
 
 def get_today_str():
     return (dt.datetime.utcnow() + dt.timedelta(hours=7)).strftime("%Y-%m-%d")
@@ -1364,13 +1364,13 @@ async def handler(websocket):
                         if not allowed:
                             await websocket.send(json.dumps({
                                 "type": "response",
-                                "message": f"Batas chat harian tercapai (10/10). Coba lagi besok jam 00:00 WIB. Sisa chat: {remaining}"
+                                "message": f"Batas chat harian tercapai ({MAX_CHATS_PER_DAY}/{MAX_CHATS_PER_DAY}). Coba lagi besok jam 00:00 WIB. Sisa chat: {remaining}"
                             }))
                             continue
                         if remaining <= 3:
                             await websocket.send(json.dumps({
                                 "type": "response",
-                                "message": f"⚠ Sisa chat hari ini: {remaining}/10"
+                                "message": f"⚠ Sisa chat hari ini: {remaining}/{MAX_CHATS_PER_DAY}"
                             }))
                     
                     # If client sends history, merge it into session
