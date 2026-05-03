@@ -56,34 +56,12 @@ import secrets
 import hashlib
 import time
 
-# PIN storage: sha256$pdkdf2_hash (stored format)
-# PIN and salt loaded from environment — MUST be set before running
-def _get_pin_config():
-    default_pin = os.environ.get("LAMBDA_PIN", "")
-    default_salt = os.environ.get("LAMBDA_PIN_SALT", "")
-    if default_pin and default_salt:
-        # Generate hash at startup from env vars
-        salt_b = default_salt.encode()
-        pin_hash = hashlib.pbkdf2_hmac('sha256', default_pin.encode(), salt_b, 100000).hex()
-        return {"salt": default_salt, "hash": pin_hash}
-    return None
-
-PIN_STORE = _get_pin_config()
-if PIN_STORE is None:
-    # No PIN configured — server will refuse to start for security
-    raise RuntimeError("LAMBDA_PIN and LAMBDA_PIN_SALT environment variables must be set!")
-
-# Failed attempts tracking: {ip: {"count": N, "until": timestamp}}
-failed_attempts = {}
-MAX_ATTEMPTS = 5
-LOCKOUT_SECONDS = 300  # 5 minutes
+# PIN disabled — no authentication required
+PIN_STORE = {"salt": "disabled", "hash": "disabled"}
 
 def verify_pin(pin: str) -> bool:
-    """Verify PIN using PBKDF2-SHA256 with stored salt"""
-    salt = PIN_STORE["salt"]
-    stored_hash = PIN_STORE["hash"]
-    computed = hashlib.pbkdf2_hmac('sha256', pin.encode(), salt.encode(), 100000).hex()
-    return secrets.compare_digest(computed, stored_hash)
+    """PIN verification disabled — always allow"""
+    return True
 
 async def verify_pin_handler(request):
     """POST /api/verify-pin - verify PIN and return success/lockout"""
