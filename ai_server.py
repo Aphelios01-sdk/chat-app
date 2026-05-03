@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI Chat Server - AI Real AI Version
+AI Chat Server - Lambda AI Version
 Web chat connects here -> calls AI API
 Tools system integrated for extended capabilities!
 """
@@ -119,20 +119,21 @@ async def verify_pin_handler(request):
 
 # Get API key from environment
 def get_api_key():
-    api_key = os.environ.get("AI_API_KEY", "")
+    api_key = os.environ.get("LAMBDA_API_KEY", "")
     env_file = Path.home() / ".hermes" / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
-            if "AI_API_KEY" in line and not line.strip().startswith("#"):
+            if "LAMBDA_API_KEY" in line and not line.strip().startswith("#"):
                 parts = line.split("=", 1)
                 if len(parts) == 2 and parts[1].strip():
                     api_key = parts[1].strip().strip('"').strip("'")
                     break
     return api_key
 
-AI_API_KEY = get_api_key()
-AI_MODEL = "AI-Model"
-AI_BASE_URL = "https://api.ai.io"
+# API key loaded from environment
+LAMBDA_API_KEY = get_api_key()
+LAMBDA_MODEL = "Lambda-AI"
+LAMBDA_API_URL = "https://api.lambda.cloud"
 
 def get_wib_time():
     """Get current time in WIB (UTC+7)"""
@@ -1183,21 +1184,21 @@ def parse_tool_call(text):
 print("╔══════════════════════════════════════════════╗")
 print("║     AI CHAT SERVER - AI Real AI        ║")
 print("╚══════════════════════════════════════════════╝")
-print(f"Model: {AI_MODEL}")
-print(f"API: {AI_BASE_URL}/anthropic/v1/messages")
+print(f"Model: {LAMBDA_MODEL}")
+print(f"API: {LAMBDA_API_URL}/v1/chat/completions")
 print(f"Key: {'*' * 24}")
 print()
 
 async def call_ai_stream(messages):
     """Call AI API with streaming and yield chunks"""
     headers = {
-        "Authorization": f"Bearer {AI_API_KEY}",
+        "Authorization": f"Bearer {LAMBDA_API_KEY}",
         "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01"
+        "x-api-provider": "lambda"
     }
     
     payload = {
-        "model": AI_MODEL,
+        "model": LAMBDA_MODEL,
         "messages": messages,
         "max_tokens": 4096,
         "temperature": 0.7,
@@ -1206,7 +1207,7 @@ async def call_ai_stream(messages):
     
     try:
         response = requests.post(
-            f"{AI_BASE_URL}/anthropic/v1/messages",
+            f"{LAMBDA_API_URL}/v1/chat/completions",
             headers=headers,
             json=payload,
             timeout=60,
@@ -1240,13 +1241,13 @@ async def call_ai_stream(messages):
 async def call_ai(messages, session_id=None):
     """Call AI API and return full response text (non-streaming fallback)"""
     headers = {
-        "Authorization": f"Bearer {AI_API_KEY}",
+        "Authorization": f"Bearer {LAMBDA_API_KEY}",
         "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01"
+        "x-api-provider": "lambda"
     }
     
     payload = {
-        "model": AI_MODEL,
+        "model": LAMBDA_MODEL,
         "messages": messages,
         "max_tokens": 4096,
         "temperature": 0.7
@@ -1254,7 +1255,7 @@ async def call_ai(messages, session_id=None):
     
     try:
         response = requests.post(
-            f"{AI_BASE_URL}/anthropic/v1/messages",
+            f"{LAMBDA_API_URL}/v1/chat/completions",
             headers=headers,
             json=payload,
             timeout=60
@@ -1443,7 +1444,7 @@ async def handler(websocket):
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
 - JANGAN PERNAH output reasoning/thinking/analysis text apapun. Langsung jawab.
 
-Model: {AI_MODEL}
+Model: {LAMBDA_MODEL}
 
 TOOLS (langsung bisa dipanggil dengan [TOOL: nama | param='nilai']):
 - calculator: kalkulasi matematika
@@ -1724,7 +1725,7 @@ async def http_handler(request):
 - WAKTU SEKARANG: {current_time} (WIB / Jakarta timezone). JANGAN bilang "saat ini" atau "kurang lebih" — gunakan waktu actual ini.
 - JANGAN PERNAH output reasoning/thinking/analysis text apapun. Langsung jawab.
 
-Model: {AI_MODEL}
+Model: {LAMBDA_MODEL}
 
 TOOLS (langsung bisa dipanggil dengan [TOOL: nama | param='nilai']):
 - calculator: kalkulasi matematika
@@ -1911,8 +1912,8 @@ async def main():
     WS_PORT = 5001
     HTTP_PORT = 5002
 
-    if not AI_API_KEY:
-        print("WARNING: No AI_API_KEY found!")
+    if not LAMBDA_API_KEY:
+        print("WARNING: No LAMBDA_API_KEY found!")
 
     # CORS middleware for aiohttp
     @web.middleware
